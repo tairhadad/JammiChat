@@ -53,7 +53,7 @@ public class TabsAccessorAdapter extends FragmentStatePagerAdapter {
         switch (position)
         {
             case 0:
-                return "Cahats";
+                return "Chats";
 
             case 1:
                 return "Group";
