@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1001450831610",
+    "firebase_url": "https://secretgram-e6a2b.firebaseio.com",
+    "project_id": "secretgram-e6a2b",
+    "storage_bucket": "secretgram-e6a2b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1001450831610:android:77087bf908864616155343",
+        "android_client_info": {
+          "package_name": "com.example.Secretgram"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1001450831610-q8kroa0dha78n38rin4gcbeo6soulgvb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.Secretgram",
+            "certificate_hash": "4cbedb36b37b6a8bc3e36e28926e82d33b937d8a"
+          }
+        },
+        {
+          "client_id": "1001450831610-h7tv029o4t4acm1r1nmk3kbdvo0o5d96.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvN2iYuZ-3-uK6aFnSbOKR7Naiijq-_ZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1001450831610-h7tv029o4t4acm1r1nmk3kbdvo0o5d96.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
