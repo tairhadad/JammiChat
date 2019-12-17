@@ -64,7 +64,7 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(this,"Please enter email...",Toast.LENGTH_SHORT);
         }
         if(TextUtils.isEmpty(password)){
-            Toast.makeText(this,"Please enter password...",Toast.LENGTH_SHORT);
+            Toast.makeText(this,"Please enter your password...",Toast.LENGTH_SHORT);
         }
         else
         {
