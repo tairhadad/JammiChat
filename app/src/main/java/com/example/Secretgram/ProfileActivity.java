@@ -173,7 +173,7 @@ public class ProfileActivity extends AppCompatActivity {
                                             if(task.isSuccessful()){
                                                 SendMessageReqestButton.setEnabled(true);
                                                 Current_State="new";
-                                                SendMessageReqestButton.setText("Send Message");
+                                                SendMessageReqestButton.setText("Send Chat Request");
 
                                                 DeclineMessageRequestButton.setVisibility(View.INVISIBLE);
                                                 DeclineMessageRequestButton.setEnabled(false);
@@ -241,7 +241,7 @@ public class ProfileActivity extends AppCompatActivity {
                                             if(task.isSuccessful()){
                                                 SendMessageReqestButton.setEnabled(true);
                                                 Current_State="new";
-                                                SendMessageReqestButton.setText("Send Message");
+                                                SendMessageReqestButton.setText("Send Chat Request");
 
                                                 DeclineMessageRequestButton.setVisibility(View.INVISIBLE);
                                                 DeclineMessageRequestButton.setEnabled(false);
