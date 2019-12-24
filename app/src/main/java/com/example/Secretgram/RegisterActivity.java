@@ -21,8 +21,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import java.security.NoSuchAlgorithmException;
+
 public class RegisterActivity extends AppCompatActivity {
 
+    private SHA_256 sha_256 = new SHA_256();
     private Button CreateAccountButton;
     private EditText UserEmail, UserPassword;
     private TextView AlreadyHaveAccountLink;
@@ -60,26 +63,36 @@ public class RegisterActivity extends AppCompatActivity {
 
         String email = UserEmail.getText().toString();
         String password = UserPassword.getText().toString();
+        String sha_password = "";
         if(TextUtils.isEmpty(email)){
-            Toast.makeText(this,"Please enter email...",Toast.LENGTH_SHORT);
+            Toast.makeText(this,"Please enter email.",Toast.LENGTH_SHORT).show();
         }
-        if(TextUtils.isEmpty(password)){
-            Toast.makeText(this,"Please enter password...",Toast.LENGTH_SHORT);
+        else if(TextUtils.isEmpty(password)){
+            Toast.makeText(this,"Please enter password.",Toast.LENGTH_SHORT).show();
+        }
+        else if(password.length() < 6){
+            Toast.makeText(this,"Password must contain at least 6 characters.",Toast.LENGTH_SHORT).show();
         }
         else
         {
             loadingBar.setTitle("Creating New Account");
-            loadingBar.setMessage("Please wait, while we wre creating new account for you...");
+            loadingBar.setMessage("Please wait while we are creating new account for you...");
             loadingBar.setCanceledOnTouchOutside(true);
             loadingBar.show();
 
-            mAuth.createUserWithEmailAndPassword(email,password)
+            //converting the password into SHA-256
+            try{
+                sha_password = sha_256.toHexString(sha_256.getSHA(password));
+            }catch (NoSuchAlgorithmException e){
+                System.out.println("Exception thrown for incorrect algorithm: " + e);
+            }
+
+            mAuth.createUserWithEmailAndPassword(email,sha_password)
                     .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful())
                             {
-
                                 String deviceToken = FirebaseInstanceId.getInstance().getToken();
 
                                 String currentUserID = mAuth.getCurrentUser().getUid();
@@ -88,12 +101,12 @@ public class RegisterActivity extends AppCompatActivity {
                                 RootRef.child("Users").child(currentUserID).child("device_token")
                                         .setValue(deviceToken);
                                 SendUserToMainActivity();
-                                Toast.makeText(RegisterActivity.this,"Account Created Successfully...",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(RegisterActivity.this,"Account Created Successfully.",Toast.LENGTH_SHORT).show();
                                 loadingBar.dismiss();
                             }
                             else{
                                 String message = task.getException().toString();
-                                Toast.makeText(RegisterActivity.this,"Error : "+ message,Toast.LENGTH_SHORT).show();
+                                Toast.makeText(RegisterActivity.this,"Error : "+ message,Toast.LENGTH_LONG).show();
                                 loadingBar.dismiss();
                             }
                         }

@@ -21,6 +21,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import java.security.NoSuchAlgorithmException;
+
 public class LoginActivity extends AppCompatActivity {
 
     //private FirebaseUser currentUser;
@@ -29,6 +31,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button LoginButton,PhoneLoginButtom;
     private EditText UserEmail, UserPassword;
     private TextView NeedNewAccountLink, ForgetPasswodLink;
+    private SHA_256 sha_256;
 
     private DatabaseReference UserRef;
 
@@ -67,19 +70,26 @@ public class LoginActivity extends AppCompatActivity {
 
         String email = UserEmail.getText().toString();
         String password = UserPassword.getText().toString();
+        String sha_password = "";
         if(TextUtils.isEmpty(email)){
-            Toast.makeText(this,"Please enter your email...",Toast.LENGTH_LONG);
+            Toast.makeText(this,"Please enter your email.",Toast.LENGTH_SHORT);
         }
         if(TextUtils.isEmpty(password)){
-            Toast.makeText(this,"Please enter password...",Toast.LENGTH_LONG);
+            Toast.makeText(this,"Please enter password.",Toast.LENGTH_SHORT);
         }
         else
         {
+            try{
+                sha_password = sha_256.toHexString(sha_256.getSHA(password));
+            }catch (NoSuchAlgorithmException e){
+                System.out.println("Exception thrown for incorrect algorithm: " + e);
+            }
+
             loadingBar.setTitle("Sign In");
             loadingBar.setMessage("Please wait...");
             loadingBar.setCanceledOnTouchOutside(true);
             loadingBar.show();
-            mAuth.signInWithEmailAndPassword(email,password)
+            mAuth.signInWithEmailAndPassword(email,sha_password)
                     .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
@@ -94,7 +104,7 @@ public class LoginActivity extends AppCompatActivity {
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if(task.isSuccessful()){
                                                     SendUserToMainActivity();
-                                                    Toast.makeText(LoginActivity.this,"Logged in Successful...",Toast.LENGTH_SHORT).show();
+                                                    Toast.makeText(LoginActivity.this,"Logged in Successful.",Toast.LENGTH_SHORT).show();
                                                     loadingBar.dismiss();
                                                 }
                                             }
@@ -102,7 +112,7 @@ public class LoginActivity extends AppCompatActivity {
                             }
                             else{
                                 String message = task.getException().toString();
-                                Toast.makeText(LoginActivity.this,"Error : "+ message,Toast.LENGTH_SHORT).show();
+                                Toast.makeText(LoginActivity.this,"Error : "+ message,Toast.LENGTH_LONG).show();
                                 loadingBar.dismiss();
 
                             }

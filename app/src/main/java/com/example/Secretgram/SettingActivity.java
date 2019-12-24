@@ -117,7 +117,7 @@ public class SettingActivity extends AppCompatActivity {
             if(resultCode==RESULT_OK){
                 final Uri resultUri = result.getUri();
                 loadingBar.setTitle("Set Profile Image");
-                loadingBar.setMessage("Please wait,your profile image is updating...");
+                loadingBar.setMessage("Please wait,your profile image is updating.");
                 loadingBar.setCanceledOnTouchOutside(false);
                 loadingBar.show();
 
@@ -126,7 +126,7 @@ public class SettingActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                         if(task.isSuccessful()){
-                            Toast.makeText(SettingActivity.this, "Profile Image uploaded Successfully..", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SettingActivity.this, "Profile Image uploaded Successfully.", Toast.LENGTH_SHORT).show();
                             final String downloadUrl = task.getResult().getStorage().getDownloadUrl().toString();
                             final String downloadUrl1 = resultUri.toString();
                                     RootRef.child("Users").child(currentUserID).child("image")
@@ -135,7 +135,7 @@ public class SettingActivity extends AppCompatActivity {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             if(task.isSuccessful()){
-                                                Toast.makeText(SettingActivity.this, "Image save in Database, Successfully...", Toast.LENGTH_SHORT).show();
+                                                Toast.makeText(SettingActivity.this, "Image save in Database Successfully.", Toast.LENGTH_SHORT).show();
                                                 loadingBar.dismiss();
                                             }
                                             else{
@@ -162,13 +162,15 @@ public class SettingActivity extends AppCompatActivity {
         String setUserName = userName.getText().toString();
         String setStatus = userStatus.getText().toString();
 
-        if (TextUtils.isEmpty(setUserName))
-        {
-            Toast.makeText(this,"Please write your user name first...",Toast.LENGTH_SHORT).show();
-        }
         if (TextUtils.isEmpty(setStatus))
         {
-            Toast.makeText(this,"Please write your status...",Toast.LENGTH_SHORT).show();
+            userStatus.setText("hay, i am available now.");
+            //Toast.makeText(this,"Please write your status.",Toast.LENGTH_SHORT).show();
+        }
+
+        if (TextUtils.isEmpty(setUserName))
+        {
+            Toast.makeText(this,"Please write your user name first.",Toast.LENGTH_SHORT).show();
         }
         else
         {
