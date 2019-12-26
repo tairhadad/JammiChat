@@ -174,6 +174,7 @@ public class ChatActivity extends AppCompatActivity {
                 public void onComplete(@NonNull Task task) {
                     if(task.isSuccessful())
                     {
+
                         Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
                     }
                     else{
