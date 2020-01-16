@@ -38,12 +38,20 @@
             android:hint="type message here..."
             android:padding="15dp"
             />
+
         <ImageButton
             android:id="@+id/send_message_btn"
             android:layout_width="45dp"
             android:layout_height="wrap_content"
             android:src="@drawable/send_message"
             />
+
+        <ImageButton
+            android:id="@+id/decrypte"
+            android:layout_width="45dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/decrypt" />
 
 
     </LinearLayout>

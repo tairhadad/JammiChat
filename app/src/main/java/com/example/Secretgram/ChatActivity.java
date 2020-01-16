@@ -8,11 +8,14 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -37,18 +40,20 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
-
-    private String messageReceiverID,messageReceiverName, messageReceiverImage, messageSenderID;
+    static int idMessage=0;
+    private String messageReceiverID, messageReceiverName, messageReceiverImage, messageSenderID;
     private TextView userName, userLastSeen;
     private CircleImageView userImage;
 
     private Toolbar ChatToolBar;
     private FirebaseAuth mAuth;
-    private  DatabaseReference RootRef;
+    private DatabaseReference RootRef;
     private ImageButton SendMessageButton;
+    private ImageButton decryptedButton;
     private EditText MessageInputText;
 
     private final List<Messages> messagesList = new ArrayList<>();
+    private List<Messages> messagesListtemp = new ArrayList<>();
     private LinearLayoutManager linearLayoutManager;
     private MessageAdapter messageAdapter;
     private RecyclerView userMessagesList;
@@ -58,7 +63,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        mAuth= FirebaseAuth.getInstance();
+        mAuth = FirebaseAuth.getInstance();
         messageSenderID = mAuth.getCurrentUser().getUid();
         messageReceiverID = getIntent().getExtras().get("visit_user_id").toString();
         messageReceiverName = getIntent().getExtras().get("visit_user_name").toString();
@@ -68,37 +73,97 @@ public class ChatActivity extends AppCompatActivity {
 
         userName.setText(messageReceiverName);
         Picasso.get().load(messageReceiverImage).placeholder(R.drawable.profile_image).into(userImage);
-
-        SendMessageButton.setOnClickListener(new View.OnClickListener() {
+        decryptedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                SendMessage();
+                AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
+                View mView = getLayoutInflater().inflate(R.layout.activity_dialog_encrypte,null);
+                final EditText dKey = (EditText) mView.findViewById(R.id.key) ;
+                final EditText dMessageNum = (EditText) mView.findViewById(R.id.input_message_number) ;
+                final EditText TextDec = (EditText) mView.findViewById(R.id.TextDec) ;
+                final TextView TextDecrypte = (TextView) mView.findViewById(R.id.TextDecrypte) ;
+
+                ImageButton exit = (ImageButton)  mView.findViewById(R.id.exit);
+                Button mDes = (Button) mView.findViewById(R.id.decrypte);
+
+                mDes.setOnClickListener(new View.OnClickListener() {
+                    @Override
+
+                    public void onClick(View v) {
+                        messagesListtemp = new ArrayList<>(messagesList);
+                        DES decrypted = new DES();
+                        String value= dMessageNum.getText().toString();
+                        int finalValue=Integer.parseInt(value);
+                        System.out.println(messagesListtemp.get(finalValue-1).getMessage());
+                        String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
+                        cut[1] = cut[1].replaceAll("\n","");
+                        String decrypted_msg = decrypted.Cipher(cut[1], dKey.getText().toString(), 2);
+                        TextDec.setText( decrypted_msg);
+                        TextDecrypte.setVisibility(View.VISIBLE);
+                        TextDec.setVisibility(View.VISIBLE);
+
+                    }
+
+                });
+                builder.setView(mView);
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
+            }
+
+        });
+        SendMessageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CharSequence options[] = new CharSequence[]
+                        {
+                                "DES",
+                                "NONE"
+                        };
+                AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
+
+                builder.setItems(options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if (i == 0) {
+                            SendMessage(0);
+
+                        }
+                        if (i == 1) {
+                            SendMessage(1);
+
+                        }
+                    }
+                });
+                builder.show();
             }
         });
     }
 
     private void IntializeControllers() {
 
-        ChatToolBar = (Toolbar)findViewById(R.id.chat_toolbar);
+        ChatToolBar = (Toolbar) findViewById(R.id.chat_toolbar);
         setSupportActionBar(ChatToolBar);
-        ActionBar actionBar= getSupportActionBar();
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setDisplayShowCustomEnabled(true);
-        LayoutInflater layoutInflater = (LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View actionBarView = layoutInflater.inflate(R.layout.custom_chat_bar,null);
+        LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View actionBarView = layoutInflater.inflate(R.layout.custom_chat_bar, null);
         actionBar.setCustomView(actionBarView);
 
 
-        userImage = (CircleImageView)findViewById(R.id.custom_profile_Image);
-        userName = (TextView)findViewById(R.id.custom_profile_name);
-        userLastSeen = (TextView)findViewById(R.id.custom_user_last_seen);
+        userImage = (CircleImageView) findViewById(R.id.custom_profile_Image);
+        userName = (TextView) findViewById(R.id.custom_profile_name);
+        userLastSeen = (TextView) findViewById(R.id.custom_user_last_seen);
 
-        SendMessageButton = (ImageButton)findViewById(R.id.send_message_btn);
+        SendMessageButton = (ImageButton) findViewById(R.id.send_message_btn);
+        decryptedButton = (ImageButton) findViewById(R.id.decrypte);
+
         MessageInputText = (EditText) findViewById(R.id.input_message);
 
         messageAdapter = new MessageAdapter(messagesList);
-        userMessagesList = (RecyclerView)findViewById(R.id.private_message_list_of_users);
+        userMessagesList = (RecyclerView) findViewById(R.id.private_message_list_of_users);
         linearLayoutManager = new LinearLayoutManager(this);
         userMessagesList.setLayoutManager(linearLayoutManager);
         userMessagesList.setAdapter(messageAdapter);
@@ -145,44 +210,84 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
-    private void  SendMessage(){
+    private void SendMessage(int i) {
+        if (i == 1) {
+            String messageText ="Message number: " + (messagesList.size()+1) +"\n"+  MessageInputText.getText().toString();
+            if (TextUtils.isEmpty(messageText)) {
+                Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
+            } else {
+                String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
+                String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
 
-        String messageText = MessageInputText.getText().toString();
-        if(TextUtils.isEmpty(messageText)){
-            Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
+                DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
+                        .child(messageReceiverID).push();
+
+                String messagePushID = userMessageKeyRef.getKey();
+
+                Map messageTextBody = new HashMap();
+                messageTextBody.put("message", messageText);
+                messageTextBody.put("type", "text");
+                messageTextBody.put("from", messageSenderID);
+
+                Map messageBodyDetails = new HashMap();
+                messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
+                messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
+
+                RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
+                    @Override
+                    public void onComplete(@NonNull Task task) {
+                        if (task.isSuccessful()) {
+
+                            Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                        }
+                        MessageInputText.setText("");
+                    }
+                });
+            }
         }
-        else{
-            String messageSenderRef= "Messages/"+ messageSenderID+ "/" + messageReceiverID;
-            String messageReceiverRef= "Messages/"+ messageReceiverID+ "/" + messageSenderID;
 
-            DatabaseReference userMessageKeyRef= RootRef.child("Messages").child(messageSenderID)
-                    .child(messageReceiverID).push();
+        if (i == 0) {
+            DES des = new DES();
 
-            String messagePushID = userMessageKeyRef.getKey();
+            String messageText = MessageInputText.getText().toString();
+            if (TextUtils.isEmpty(messageText)) {
+                Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
+            } else {
+                String encrypted_msg ="Message number: " + (messagesList.size()+1) +"\n"+ des.Cipher(messageText, "12345678", 1);
 
-            Map messageTextBody= new HashMap();
-            messageTextBody.put("message",messageText);
-            messageTextBody.put("type","text");
-            messageTextBody.put("from",messageSenderID);
+                String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
+                String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
 
-            Map messageBodyDetails = new HashMap();
-            messageBodyDetails.put(messageSenderRef+ "/" + messagePushID , messageTextBody);
-            messageBodyDetails.put(messageReceiverRef+ "/" + messagePushID , messageTextBody);
+                DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
+                        .child(messageReceiverID).push();
 
-            RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
-                @Override
-                public void onComplete(@NonNull Task task) {
-                    if(task.isSuccessful())
-                    {
+                String messagePushID = userMessageKeyRef.getKey();
 
-                        Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                Map messageTextBody = new HashMap();
+                messageTextBody.put("message", encrypted_msg);
+                messageTextBody.put("type", "text");
+                messageTextBody.put("from", messageSenderID);
+
+                Map messageBodyDetails = new HashMap();
+                messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
+                messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
+
+                RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
+                    @Override
+                    public void onComplete(@NonNull Task task) {
+                        if (task.isSuccessful()) {
+
+                            Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                        }
+                        MessageInputText.setText("");
                     }
-                    else{
-                        Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
-                    }
-                    MessageInputText.setText("");
-                }
-            });
+                });
+            }
         }
     }
+
 }

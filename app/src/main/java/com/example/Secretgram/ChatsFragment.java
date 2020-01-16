@@ -98,7 +98,6 @@ public class ChatsFragment extends Fragment {
                                             chatIntent.putExtra("visit_user_id",userIDs);
                                             chatIntent.putExtra("visit_user_name",retName);
                                             chatIntent.putExtra("visit_image", retImage[0]);
-
                                             startActivity(chatIntent);
 
                                         }
@@ -138,8 +137,6 @@ public class ChatsFragment extends Fragment {
             profileImage = itemView.findViewById(R.id.users_profile_image);
             userStatus = itemView.findViewById(R.id.user_status);
             userName = itemView.findViewById(R.id.user_profile_name);
-
-
         }
     }
 }
