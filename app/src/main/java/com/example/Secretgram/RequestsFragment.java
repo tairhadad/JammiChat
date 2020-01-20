@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,6 +30,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
@@ -42,7 +45,7 @@ public class RequestsFragment extends Fragment {
 
     private DatabaseReference ChatRequestsRef, UsersRef, ContactsRef;
     private FirebaseAuth mAuth;
-    private String currentUserID;
+    private String currentUserID, receiverUserID;
 
     public RequestsFragment() {
         // Required empty public constructor
@@ -63,6 +66,9 @@ public class RequestsFragment extends Fragment {
 
         myRequestsList= (RecyclerView) RequestsFragmentView.findViewById(R.id.chat_requests_list);
         myRequestsList.setLayoutManager(new LinearLayoutManager(getContext()));
+
+
+        //receiverUserID= getIntent().getExtras().get("visit_user_id").toString();
 
         return RequestsFragmentView;
     }
@@ -104,6 +110,7 @@ public class RequestsFragment extends Fragment {
                                                 holder.userName.setText(requestUserName);
                                                 holder.userStatus.setText("wants to connect with you.");
 
+
                                                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                                                     @Override
                                                     public void onClick(View v) {
@@ -119,6 +126,7 @@ public class RequestsFragment extends Fragment {
                                                             @Override
                                                             public void onClick(DialogInterface dialogInterface, int i) {
                                                                 if(i==0){
+
                                                                     ContactsRef.child(currentUserID).child(list_user_id).child("Contact")
                                                                     .setValue("Saved").addOnCompleteListener(new OnCompleteListener<Void>() {
                                                                         @Override

@@ -19,11 +19,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ProfileActivity extends AppCompatActivity {
+
+    public static ProfileActivity instance;
     private String receiverUserID, senderUserID,Current_State;
     private CircleImageView userProfileImage;
     private TextView userProfileName, userProfileStatus;
@@ -52,7 +55,7 @@ public class ProfileActivity extends AppCompatActivity {
         DeclineMessageRequestButton= (Button)findViewById(R.id.decline_message_request_button);
 
         Current_State= "new";
-
+        instance = this;
         RetrieveUserInfo();
     }
 
@@ -278,6 +281,7 @@ public class ProfileActivity extends AppCompatActivity {
                                                                 SendMessageReqestButton.setEnabled(true);
                                                                 Current_State = "request_sent";
                                                                 SendMessageReqestButton.setText("Cancel Chat Request");
+                                                                setKeys();
                                                             }
                                                         }
                                                     });
@@ -289,6 +293,44 @@ public class ProfileActivity extends AppCompatActivity {
                     }
                 });
     }
+
+
+    public void setKeys(){
+
+        //getting and setting public and private keys inside the one who accept.
+
+        ArrayList<String> data = new ArrayList<>();
+
+        ArrayList<String> rec_list = new ArrayList<>();
+        ArrayList<String> send_list = new ArrayList<>();
+
+        RSA r_rsa = new RSA();
+        RSA s_rsa = new RSA();
+        data = r_rsa.Make_RSA();
+
+        //build keys
+        rec_list = r_rsa.Build_Keys(data.get(0), data.get(1));
+        send_list = s_rsa.Build_Keys(data.get(0), data.get(1));
+
+        //changing public keys.
+        send_list.add(s_rsa.Make_ConnectionKey(rec_list.get(0)));
+        rec_list.add(r_rsa.Make_ConnectionKey(send_list.get(0)));
+
+        //updating the sender with his keys
+
+        UserRef.child(senderUserID).child("PublicKey").setValue(send_list.get(0));
+        UserRef.child(senderUserID).child("PrivateKey").setValue(send_list.get(1));
+        UserRef.child(senderUserID).child("Key").setValue(send_list.get(2));
+
+        //receiver
+        UserRef.child(receiverUserID).child("PublicKey").setValue(rec_list.get(0));
+        UserRef.child(receiverUserID).child("PrivateKey").setValue(rec_list.get(1));
+        UserRef.child(receiverUserID).child("Key").setValue(rec_list.get(2));
+
+
+    }
+
+
 }
 
 

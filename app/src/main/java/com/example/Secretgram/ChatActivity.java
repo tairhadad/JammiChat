@@ -30,6 +30,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private Toolbar ChatToolBar;
     private FirebaseAuth mAuth;
-    private DatabaseReference RootRef;
+    private DatabaseReference RootRef, UsersRef;
     private ImageButton SendMessageButton;
     private ImageButton decryptedButton;
     private EditText MessageInputText;
@@ -69,6 +70,7 @@ public class ChatActivity extends AppCompatActivity {
         messageReceiverName = getIntent().getExtras().get("visit_user_name").toString();
         messageReceiverImage = getIntent().getExtras().get("visit_image").toString();
         RootRef = FirebaseDatabase.getInstance().getReference();
+        UsersRef= FirebaseDatabase.getInstance().getReference().child("Users");
         IntializeControllers();
 
         userName.setText(messageReceiverName);
@@ -235,6 +237,39 @@ public class ChatActivity extends AppCompatActivity {
 
     private void SendMessage(int i) {
         if (i == 1) {
+
+
+            //starting from here I'm trying...
+            final String[] my_key = new String[1];
+            UsersRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+
+                    my_key[0] = dataSnapshot.child(messageSenderID).child("Key").getValue().toString();
+                    String aa = "a";
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    String aa = "a";
+                }
+            });
+
+            UsersRef.child(messageSenderID).child("name").setValue("kfir8");
+
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users");
+            DatabaseReference idRef = userRef.child(messageSenderID);
+            DatabaseReference keyRef = idRef.child("Key");
+            String sender_key = keyRef.toString();
+            System.out.println(sender_key);
+            //DatabaseReference userConnectionKey = RootRef.child("Users").child(messageSenderID).child("Key");
+            //String connectionKey = userConnectionKey.getKey();
+
+//untill here.
+
+
             String messageText ="Message number: " + (messagesList.size()+1) +"\n"+  MessageInputText.getText().toString();
             if (TextUtils.isEmpty(messageText)) {
                 Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
@@ -344,6 +379,7 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
 
                     public void onClick(View v) {
+
                         DES des = new DES();
                         String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, "rsa", 1);
 

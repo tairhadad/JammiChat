@@ -100,7 +100,11 @@ public class RegisterActivity extends AppCompatActivity {
 
                                 RootRef.child("Users").child(currentUserID).child("device_token")
                                         .setValue(deviceToken);
+
+
+
                                 SendUserToMainActivity();
+
                                 Toast.makeText(RegisterActivity.this,"Account Created Successfully.",Toast.LENGTH_SHORT).show();
                                 loadingBar.dismiss();
                             }

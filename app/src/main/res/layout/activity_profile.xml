@@ -57,7 +57,7 @@
         android:background="@drawable/buttons"
         android:textStyle="bold"
         android:textSize="20sp"
-        android:text="Send Message"
+        android:text="Send Chat Request"
         android:textAllCaps="false"
         />
 
@@ -73,7 +73,7 @@
         android:background="@drawable/buttons"
         android:textStyle="bold"
         android:textSize="20sp"
-        android:text="Cancelhat Request"
+        android:text="Cancel Request"
         android:textAllCaps="false"
         android:visibility="invisible"
         />
