@@ -84,8 +84,8 @@ public class ChatActivity extends AppCompatActivity {
                 final EditText TextDec = (EditText) mView.findViewById(R.id.TextDec) ;
                 final TextView TextDecrypte = (TextView) mView.findViewById(R.id.TextDecrypte) ;
 
-                ImageButton exit = (ImageButton)  mView.findViewById(R.id.exit);
                 Button mDes = (Button) mView.findViewById(R.id.decrypte);
+                Button mRSA = (Button) mView.findViewById(R.id.Rsa);
 
                 mDes.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -106,6 +106,26 @@ public class ChatActivity extends AppCompatActivity {
                     }
 
                 });
+
+                mRSA.setOnClickListener(new View.OnClickListener() {
+                    @Override
+
+                    public void onClick(View v) {
+                        messagesListtemp = new ArrayList<>(messagesList);
+                        DES decrypted = new DES();
+                        String value= dMessageNum.getText().toString();
+                        int finalValue=Integer.parseInt(value);
+                        System.out.println(messagesListtemp.get(finalValue-1).getMessage());
+                        String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
+                        cut[1] = cut[1].replaceAll("\n","");
+                        String decrypted_msg = decrypted.Cipher(cut[1], "RSA", 2);
+                        TextDec.setText( decrypted_msg);
+                        TextDecrypte.setVisibility(View.VISIBLE);
+                        TextDec.setVisibility(View.VISIBLE);
+
+                    }
+
+                });
                 builder.setView(mView);
                 AlertDialog dialog = builder.create();
                 dialog.show();
@@ -119,6 +139,7 @@ public class ChatActivity extends AppCompatActivity {
                 CharSequence options[] = new CharSequence[]
                         {
                                 "DES",
+                                "RSA",
                                 "NONE"
                         };
                 AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
@@ -132,7 +153,9 @@ public class ChatActivity extends AppCompatActivity {
                         }
                         if (i == 1) {
                             SendMessage(1);
-
+                        }
+                        if (i == 2) {
+                            SendMessage(2);
                         }
                     }
                 });
@@ -247,6 +270,7 @@ public class ChatActivity extends AppCompatActivity {
                 });
             }
         }
+
         if(i==0){
             final String messageText = MessageInputText.getText().toString();
             if (TextUtils.isEmpty(messageText)) {
@@ -264,8 +288,7 @@ public class ChatActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         DES des = new DES();
                         if (e_Key.length() != 8) {
-                            Toast.makeText(ChatActivity.this, "aaa...", Toast.LENGTH_SHORT).show();
-
+                            Toast.makeText(ChatActivity.this, "The key most be 8 charcters...", Toast.LENGTH_SHORT).show();
                         }
                         else {
                             String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, e_Key.getText().toString(), 1);
@@ -307,8 +330,60 @@ public class ChatActivity extends AppCompatActivity {
                 AlertDialog dialog = builder.create();
                 dialog.show();
                 }
+        }
+        if(i==2){
+            final String messageText = MessageInputText.getText().toString();
+            if (TextUtils.isEmpty(messageText)) {
+                Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
+            } else {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
+                View mView1 = getLayoutInflater().inflate(R.layout.activity_dialog_key, null);
+                Button mDes = (Button) mView1.findViewById(R.id.Rsa);
+                mDes.setOnClickListener(new View.OnClickListener() {
+                    @Override
+
+                    public void onClick(View v) {
+                        DES des = new DES();
+                        String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, "rsa", 1);
+
+                        String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
+                        String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
+
+                        DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
+                                .child(messageReceiverID).push();
+
+                        String messagePushID = userMessageKeyRef.getKey();
+
+                        Map messageTextBody = new HashMap();
+                        messageTextBody.put("message", encrypted_msg);
+                        messageTextBody.put("type", "text");
+                        messageTextBody.put("from", messageSenderID);
+
+                        Map messageBodyDetails = new HashMap();
+                        messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
+                        messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
+
+                        RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
+                            @Override
+                            public void onComplete(@NonNull Task task) {
+                                if (task.isSuccessful()) {
+
+                                    Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                                }
+                                MessageInputText.setText("");
+                            }
+                        });
 
 
+                    }
+                });
+                builder.setView(mView1);
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
         }
     }
 
