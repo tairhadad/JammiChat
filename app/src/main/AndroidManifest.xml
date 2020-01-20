@@ -15,7 +15,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".dialog_encrypte"></activity>
+        <activity android:name=".dialog_key"></activity>
+        <activity android:name=".dialog_encrypte" />
         <activity
             android:name=".ChatActivity"
             android:parentActivityName=".MainActivity" />

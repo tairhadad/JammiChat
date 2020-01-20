@@ -247,46 +247,68 @@ public class ChatActivity extends AppCompatActivity {
                 });
             }
         }
-
-        if (i == 0) {
-            DES des = new DES();
-
-            String messageText = MessageInputText.getText().toString();
+        if(i==0){
+            final String messageText = MessageInputText.getText().toString();
             if (TextUtils.isEmpty(messageText)) {
                 Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
             } else {
-                String encrypted_msg ="Message number: " + (messagesList.size()+1) +"\n"+ des.Cipher(messageText, "12345678", 1);
 
-                String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
-                String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
+                AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
+                View mView1 = getLayoutInflater().inflate(R.layout.activity_dialog_key, null);
+                final EditText e_Key = (EditText) mView1.findViewById(R.id.key_Enc);
 
-                DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
-                        .child(messageReceiverID).push();
-
-                String messagePushID = userMessageKeyRef.getKey();
-
-                Map messageTextBody = new HashMap();
-                messageTextBody.put("message", encrypted_msg);
-                messageTextBody.put("type", "text");
-                messageTextBody.put("from", messageSenderID);
-
-                Map messageBodyDetails = new HashMap();
-                messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
-                messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
-
-                RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
+                Button mDes = (Button) mView1.findViewById(R.id.ecrypte);
+                mDes.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onComplete(@NonNull Task task) {
-                        if (task.isSuccessful()) {
 
-                            Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                    public void onClick(View v) {
+                        DES des = new DES();
+                        if (e_Key.length() != 8) {
+                            Toast.makeText(ChatActivity.this, "aaa...", Toast.LENGTH_SHORT).show();
+
                         }
-                        MessageInputText.setText("");
+                        else {
+                            String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, e_Key.getText().toString(), 1);
+
+                            String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
+                            String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
+
+                            DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
+                                    .child(messageReceiverID).push();
+
+                            String messagePushID = userMessageKeyRef.getKey();
+
+                            Map messageTextBody = new HashMap();
+                            messageTextBody.put("message", encrypted_msg);
+                            messageTextBody.put("type", "text");
+                            messageTextBody.put("from", messageSenderID);
+
+                            Map messageBodyDetails = new HashMap();
+                            messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
+                            messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
+
+                            RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
+                                @Override
+                                public void onComplete(@NonNull Task task) {
+                                    if (task.isSuccessful()) {
+
+                                        Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                                    }
+                                    MessageInputText.setText("");
+                                }
+                            });
+
+                        }
                     }
                 });
-            }
+                builder.setView(mView1);
+                AlertDialog dialog = builder.create();
+                dialog.show();
+                }
+
+
         }
     }
 
