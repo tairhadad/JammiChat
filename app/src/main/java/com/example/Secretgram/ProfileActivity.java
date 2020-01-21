@@ -319,12 +319,10 @@ public class ProfileActivity extends AppCompatActivity {
         //updating the sender with his keys
 
         UserRef.child(senderUserID).child("PublicKey").setValue(send_list.get(0));
-        UserRef.child(senderUserID).child("PrivateKey").setValue(send_list.get(1));
         UserRef.child(senderUserID).child("Key").setValue(send_list.get(2));
 
         //receiver
         UserRef.child(receiverUserID).child("PublicKey").setValue(rec_list.get(0));
-        UserRef.child(receiverUserID).child("PrivateKey").setValue(rec_list.get(1));
         UserRef.child(receiverUserID).child("Key").setValue(rec_list.get(2));
 
 

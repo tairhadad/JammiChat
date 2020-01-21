@@ -58,6 +58,7 @@ public class ChatActivity extends AppCompatActivity {
     private LinearLayoutManager linearLayoutManager;
     private MessageAdapter messageAdapter;
     private RecyclerView userMessagesList;
+    private final String[] my_key = new String[1];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,7 +121,7 @@ public class ChatActivity extends AppCompatActivity {
                         System.out.println(messagesListtemp.get(finalValue-1).getMessage());
                         String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
                         cut[1] = cut[1].replaceAll("\n","");
-                        String decrypted_msg = decrypted.Cipher(cut[1], "RSA", 2);
+                        String decrypted_msg = decrypted.Cipher(cut[1], "45454545", 2);
                         TextDec.setText( decrypted_msg);
                         TextDecrypte.setVisibility(View.VISIBLE);
                         TextDec.setVisibility(View.VISIBLE);
@@ -154,6 +155,7 @@ public class ChatActivity extends AppCompatActivity {
 
                         }
                         if (i == 1) {
+                            RootRef.child("Users").child(messageSenderID).child("RSA").setValue("1");
                             SendMessage(1);
                         }
                         if (i == 2) {
@@ -198,19 +200,42 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        RootRef.child("Users").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                String myKey = dataSnapshot.child(messageSenderID).child("Key").getValue().toString();
+                my_key[0] = myKey;
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
         RootRef.child("Messages").child(messageSenderID).child(messageReceiverID)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
                         Messages messages = dataSnapshot.getValue(Messages.class);
-
                         messagesList.add(messages);
                         messageAdapter.notifyDataSetChanged();
-
                         userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
-
                     }
 
                     @Override
@@ -239,70 +264,61 @@ public class ChatActivity extends AppCompatActivity {
         if (i == 1) {
 
 
-            //starting from here I'm trying...
-            final String[] my_key = new String[1];
-            UsersRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-
-                    my_key[0] = dataSnapshot.child(messageSenderID).child("Key").getValue().toString();
-                    String aa = "a";
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    String aa = "a";
-                }
-            });
-
-            UsersRef.child(messageSenderID).child("name").setValue("kfir8");
-
-            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users");
-            DatabaseReference idRef = userRef.child(messageSenderID);
-            DatabaseReference keyRef = idRef.child("Key");
-            String sender_key = keyRef.toString();
-            System.out.println(sender_key);
-            //DatabaseReference userConnectionKey = RootRef.child("Users").child(messageSenderID).child("Key");
-            //String connectionKey = userConnectionKey.getKey();
-
-//untill here.
-
-
-            String messageText ="Message number: " + (messagesList.size()+1) +"\n"+  MessageInputText.getText().toString();
+            final String messageText = "Message number: " + (messagesList.size() + 1) + "\n" + MessageInputText.getText().toString();
             if (TextUtils.isEmpty(messageText)) {
                 Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
             } else {
-                String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
-                String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
-
-                DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
-                        .child(messageReceiverID).push();
-
-                String messagePushID = userMessageKeyRef.getKey();
-
-                Map messageTextBody = new HashMap();
-                messageTextBody.put("message", messageText);
-                messageTextBody.put("type", "text");
-                messageTextBody.put("from", messageSenderID);
-
-                Map messageBodyDetails = new HashMap();
-                messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
-                messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
-
-                RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
+               /* UsersRef.addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onComplete(@NonNull Task task) {
-                        if (task.isSuccessful()) {
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                            Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
-                        }
-                        MessageInputText.setText("");
+                        my_key[0] = dataSnapshot.child(messageSenderID).child("Key").getValue().toString();
+
                     }
-                });
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });*/
+
+                final Map messageBodyDetails = new HashMap();
+
+
+                //if (my_key[0] != null) {
+                    String str = my_key[0];
+                    DES des = new DES();
+                    String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, "45454545", 1);
+
+                    String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
+                    String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
+
+                    DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
+                            .child(messageReceiverID).push();
+
+                    String messagePushID = userMessageKeyRef.getKey();
+
+                    Map messageTextBody = new HashMap();
+                    messageTextBody.put("message", encrypted_msg);
+                    messageTextBody.put("type", "text");
+                    messageTextBody.put("from", messageSenderID);
+                    messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
+                    messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
+
+                    RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(@NonNull Task task) {
+                            if (task.isSuccessful()) {
+
+                                Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                            }
+                            MessageInputText.setText("");
+                        }
+                    });
+
+
+               // }
             }
         }
 
@@ -367,58 +383,33 @@ public class ChatActivity extends AppCompatActivity {
                 }
         }
         if(i==2){
-            final String messageText = MessageInputText.getText().toString();
+            String messageText ="Message number: " + (messagesList.size()+1) +"\n"+  MessageInputText.getText().toString();
             if (TextUtils.isEmpty(messageText)) {
                 Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
             } else {
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
-                View mView1 = getLayoutInflater().inflate(R.layout.activity_dialog_key, null);
-                Button mDes = (Button) mView1.findViewById(R.id.Rsa);
-                mDes.setOnClickListener(new View.OnClickListener() {
+                String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
+                String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
+                DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
+                        .child(messageReceiverID).push();
+                String messagePushID = userMessageKeyRef.getKey();
+                Map messageTextBody = new HashMap();
+                messageTextBody.put("message", messageText);
+                messageTextBody.put("type", "text");
+                messageTextBody.put("from", messageSenderID);
+                Map messageBodyDetails = new HashMap();
+                messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
+                messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
+                RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
                     @Override
-
-                    public void onClick(View v) {
-
-                        DES des = new DES();
-                        String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, "rsa", 1);
-
-                        String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
-                        String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
-
-                        DatabaseReference userMessageKeyRef = RootRef.child("Messages").child(messageSenderID)
-                                .child(messageReceiverID).push();
-
-                        String messagePushID = userMessageKeyRef.getKey();
-
-                        Map messageTextBody = new HashMap();
-                        messageTextBody.put("message", encrypted_msg);
-                        messageTextBody.put("type", "text");
-                        messageTextBody.put("from", messageSenderID);
-
-                        Map messageBodyDetails = new HashMap();
-                        messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
-                        messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
-
-                        RootRef.updateChildren(messageBodyDetails).addOnCompleteListener(new OnCompleteListener() {
-                            @Override
-                            public void onComplete(@NonNull Task task) {
-                                if (task.isSuccessful()) {
-
-                                    Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
-                                }
-                                MessageInputText.setText("");
-                            }
-                        });
-
-
+                    public void onComplete(@NonNull Task task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                        }
+                        MessageInputText.setText("");
                     }
                 });
-                builder.setView(mView1);
-                AlertDialog dialog = builder.create();
-                dialog.show();
             }
         }
     }
