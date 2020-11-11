@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -20,7 +19,7 @@
         android:id="@+id/visit_user_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="user name"
+        android:text="@string/user_name"
         android:layout_below="@+id/visit_profile_image"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
@@ -34,7 +33,7 @@
         android:id="@+id/visit_profile_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="hey i'm using Secretgram chat app .."
+        android:text="@string/default_message"
         android:layout_below="@+id/visit_user_name"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
@@ -57,7 +56,7 @@
         android:background="@drawable/buttons"
         android:textStyle="bold"
         android:textSize="20sp"
-        android:text="Send Chat Request"
+        android:text="@string/send_chat_request"
         android:textAllCaps="false"
         />
 
@@ -73,7 +72,7 @@
         android:background="@drawable/buttons"
         android:textStyle="bold"
         android:textSize="20sp"
-        android:text="Cancel Request"
+        android:text="@string/cancel_request"
         android:textAllCaps="false"
         android:visibility="invisible"
         />

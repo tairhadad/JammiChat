@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -35,21 +34,24 @@
             android:id="@+id/input_message"
             android:layout_width="243dp"
             android:layout_height="wrap_content"
-            android:hint="type message here..."
-            android:padding="15dp" />
+            android:hint="@string/enter_message"
+            android:padding="15dp"
+            android:autofillHints="@string/enter_message"
+            android:inputType="text" />
 
         <ImageButton
             android:id="@+id/send_message_btn"
             android:layout_width="45dp"
             android:layout_height="wrap_content"
             android:src="@drawable/send_message"
-            />
+            android:contentDescription="@string/send" />
 
         <ImageButton
             android:id="@+id/decrypte"
             android:layout_width="66dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/decrypt" />
+            android:src="@drawable/decrypt"
+            android:contentDescription="@string/decrypt" />
 
 
     </LinearLayout>
