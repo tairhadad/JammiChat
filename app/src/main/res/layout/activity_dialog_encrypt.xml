@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".dialog_encrypte">
+    tools:context=".dialog_encrypt">
 
     <EditText
         android:id="@+id/input_message_number"

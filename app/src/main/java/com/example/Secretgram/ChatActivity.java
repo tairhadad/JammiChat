@@ -1,5 +1,6 @@
 package com.example.Secretgram;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -13,12 +14,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +32,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -72,39 +73,47 @@ public class ChatActivity extends AppCompatActivity {
         messageReceiverImage = getIntent().getExtras().get("visit_image").toString();
         RootRef = FirebaseDatabase.getInstance().getReference();
         UsersRef= FirebaseDatabase.getInstance().getReference().child("Users");
-        IntializeControllers();
+        InitializeControllers();
 
         userName.setText(messageReceiverName);
         Picasso.get().load(messageReceiverImage).placeholder(R.drawable.profile_image).into(userImage);
         decryptedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
-                View mView = getLayoutInflater().inflate(R.layout.activity_dialog_encrypte,null);
+                View mView = getLayoutInflater().inflate(R.layout.activity_dialog_encrypt,null);
                 final EditText dKey = (EditText) mView.findViewById(R.id.key) ;
                 final EditText dMessageNum = (EditText) mView.findViewById(R.id.input_message_number) ;
                 final EditText TextDec = (EditText) mView.findViewById(R.id.TextDec) ;
-                final TextView TextDecrypte = (TextView) mView.findViewById(R.id.TextDecrypte) ;
+                final TextView TextDecrypt = (TextView) mView.findViewById(R.id.TextDecrypt) ;
 
-                Button mDes = (Button) mView.findViewById(R.id.decrypte);
+                Button mDes = (Button) mView.findViewById(R.id.decrypt);
                 Button mRSA = (Button) mView.findViewById(R.id.Rsa);
 
                 mDes.setOnClickListener(new View.OnClickListener() {
                     @Override
 
                     public void onClick(View v) {
-                        messagesListtemp = new ArrayList<>(messagesList);
-                        DES decrypted = new DES();
-                        String value= dMessageNum.getText().toString();
-                        int finalValue=Integer.parseInt(value);
-                        System.out.println(messagesListtemp.get(finalValue-1).getMessage());
-                        String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
-                        cut[1] = cut[1].replaceAll("\n","");
-                        String decrypted_msg = decrypted.Cipher(cut[1], dKey.getText().toString(), 2);
-                        TextDec.setText( decrypted_msg);
-                        TextDecrypte.setVisibility(View.VISIBLE);
-                        TextDec.setVisibility(View.VISIBLE);
+                        if (dKey.length() == 0){
+                            Toast.makeText(ChatActivity.this, "Insert a Key", Toast.LENGTH_SHORT).show();
+                        }
+                        else{
+                            String DESKey = dKey.getText().toString();
+                            if (dKey.length() < 8){
+                                DESKey = autoCompleteKey(DESKey);
+                            }
+                            messagesListtemp = new ArrayList<>(messagesList);
+                            DES decrypted = new DES();
+                            String value= dMessageNum.getText().toString();
+                            int finalValue=Integer.parseInt(value);
+                            System.out.println(messagesListtemp.get(finalValue-1).getMessage());
+                            String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
+                            cut[1] = cut[1].replaceAll("\n","");
+                            String decrypted_msg = decrypted.Cipher(cut[1], DESKey, 2);
+                            TextDec.setText( decrypted_msg);
+                            TextDecrypt.setVisibility(View.VISIBLE);
+                            TextDec.setVisibility(View.VISIBLE);
+                        }
 
                     }
 
@@ -114,6 +123,7 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
 
                     public void onClick(View v) {
+                        //TODO - get the key from RSA list and decrypt it
                         messagesListtemp = new ArrayList<>(messagesList);
                         DES decrypted = new DES();
                         String value= dMessageNum.getText().toString();
@@ -123,7 +133,7 @@ public class ChatActivity extends AppCompatActivity {
                         cut[1] = cut[1].replaceAll("\n","");
                         String decrypted_msg = decrypted.Cipher(cut[1], "45454545", 2);
                         TextDec.setText( decrypted_msg);
-                        TextDecrypte.setVisibility(View.VISIBLE);
+                        TextDecrypt.setVisibility(View.VISIBLE);
                         TextDec.setVisibility(View.VISIBLE);
 
                     }
@@ -150,17 +160,11 @@ public class ChatActivity extends AppCompatActivity {
                 builder.setItems(options, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        if (i == 0) {
-                            SendMessage(0);
-
-                        }
                         if (i == 1) {
                             RootRef.child("Users").child(messageSenderID).child("RSA").setValue("1");
-                            SendMessage(1);
                         }
-                        if (i == 2) {
-                            SendMessage(2);
-                        }
+                        SendMessage(i);
+                        //CloseKeyboard();
                     }
                 });
                 builder.show();
@@ -168,7 +172,7 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    private void IntializeControllers() {
+    private void InitializeControllers() {
 
         ChatToolBar = (Toolbar) findViewById(R.id.chat_toolbar);
         setSupportActionBar(ChatToolBar);
@@ -185,7 +189,7 @@ public class ChatActivity extends AppCompatActivity {
         userLastSeen = (TextView) findViewById(R.id.custom_user_last_seen);
 
         SendMessageButton = (ImageButton) findViewById(R.id.send_message_btn);
-        decryptedButton = (ImageButton) findViewById(R.id.decrypte);
+        decryptedButton = (ImageButton) findViewById(R.id.decrypt);
 
         MessageInputText = (EditText) findViewById(R.id.input_message);
 
@@ -261,12 +265,12 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void SendMessage(int i) {
+        //RSA sending message.
         if (i == 1) {
-
-
-            final String messageText = "Message number: " + (messagesList.size() + 1) + "\n" + MessageInputText.getText().toString();
+            //TODO send message and encrypt it with RSA
+            final String messageText = "Message Number: " + (messagesList.size() + 1) + "\n" + MessageInputText.getText().toString();
             if (TextUtils.isEmpty(messageText)) {
-                Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Enter a Message", Toast.LENGTH_SHORT).show();
             } else {
                /* UsersRef.addValueEventListener(new ValueEventListener() {
                     @Override
@@ -282,7 +286,6 @@ public class ChatActivity extends AppCompatActivity {
                 });*/
 
                 final Map messageBodyDetails = new HashMap();
-
 
                 //if (my_key[0] != null) {
                     String str = my_key[0];
@@ -309,7 +312,7 @@ public class ChatActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task task) {
                             if (task.isSuccessful()) {
 
-                                Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ChatActivity.this, "Message Sent Successfully", Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
                             }
@@ -322,28 +325,38 @@ public class ChatActivity extends AppCompatActivity {
             }
         }
 
-        if(i==0){
+        //DES sending message.
+        else if(i==0){
+            final AlertDialog dialog;
             final String messageText = MessageInputText.getText().toString();
             if (TextUtils.isEmpty(messageText)) {
-                Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Enter a Message", Toast.LENGTH_SHORT).show();
             } else {
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
                 View mView1 = getLayoutInflater().inflate(R.layout.activity_dialog_key, null);
                 final EditText e_Key = (EditText) mView1.findViewById(R.id.key_Enc);
 
-                Button mDes = (Button) mView1.findViewById(R.id.ecrypte);
+                final Button mDes = (Button) mView1.findViewById(R.id.ecrypt);
+                builder.setView(mView1);
+                dialog = builder.create();
+                dialog.show();
                 mDes.setOnClickListener(new View.OnClickListener() {
                     @Override
 
                     public void onClick(View v) {
                         DES des = new DES();
-                        if (e_Key.length() != 8) {
-                            Toast.makeText(ChatActivity.this, "The key most be 8 charcters...", Toast.LENGTH_SHORT).show();
-                        }
-                        else {
-                            String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, e_Key.getText().toString(), 1);
 
+                        //completing the Key to be 8 characters
+                        if (e_Key.length() == 0) {
+                            Toast.makeText(ChatActivity.this, "Insert a Key", Toast.LENGTH_SHORT).show();
+                        }
+                        else{
+                            String DESKey = e_Key.getText().toString();
+                            if (e_Key.length() < 8) {
+                                DESKey = autoCompleteKey(DESKey);
+                            }
+                            String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, DESKey, 1);
                             String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
                             String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
 
@@ -365,27 +378,24 @@ public class ChatActivity extends AppCompatActivity {
                                 @Override
                                 public void onComplete(@NonNull Task task) {
                                     if (task.isSuccessful()) {
-
-                                        Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(ChatActivity.this, "Message Sent Successfully", Toast.LENGTH_SHORT).show();
+                                        dialog.dismiss();
                                     } else {
                                         Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
                                     }
                                     MessageInputText.setText("");
                                 }
                             });
-
                         }
                     }
                 });
-                builder.setView(mView1);
-                AlertDialog dialog = builder.create();
-                dialog.show();
                 }
         }
-        if(i==2){
+        //No encryption sending message.
+        else if(i==2){
             String messageText ="Message number: " + (messagesList.size()+1) +"\n"+  MessageInputText.getText().toString();
             if (TextUtils.isEmpty(messageText)) {
-                Toast.makeText(this, "first write your message...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Enter a Message", Toast.LENGTH_SHORT).show();
             } else {
                 String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
                 String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
@@ -403,7 +413,7 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task task) {
                         if (task.isSuccessful()) {
-                            Toast.makeText(ChatActivity.this, "Message sent Successful...", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ChatActivity.this, "Message Sent Successfully", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
                         }
@@ -412,6 +422,18 @@ public class ChatActivity extends AppCompatActivity {
                 });
             }
         }
+    }
+
+    private void CloseKeyboard() {
+        this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
+        this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
+    }
+
+    private String autoCompleteKey(String key){
+        while (key.length() < 8){
+            key = key + key;
+        }
+        return key.substring(0,8);
     }
 
 }

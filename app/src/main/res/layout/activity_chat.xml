@@ -47,7 +47,7 @@
             android:contentDescription="@string/send" />
 
         <ImageButton
-            android:id="@+id/decrypte"
+            android:id="@+id/decrypt"
             android:layout_width="66dp"
             android:layout_height="wrap_content"
             android:src="@drawable/decrypt"
