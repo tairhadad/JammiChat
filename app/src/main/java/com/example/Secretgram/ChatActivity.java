@@ -99,7 +99,7 @@ public class ChatActivity extends AppCompatActivity {
                         }
                         else{
                             String DESKey = dKey.getText().toString();
-                            if (dKey.length() < 8){
+                            if (dKey.length() != 8){
                                 DESKey = autoCompleteKey(DESKey);
                             }
                             messagesListtemp = new ArrayList<>(messagesList);
@@ -353,7 +353,7 @@ public class ChatActivity extends AppCompatActivity {
                         }
                         else{
                             String DESKey = e_Key.getText().toString();
-                            if (e_Key.length() < 8) {
+                            if (e_Key.length() != 8) {
                                 DESKey = autoCompleteKey(DESKey);
                             }
                             String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, DESKey, 1);
@@ -430,10 +430,28 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private String autoCompleteKey(String key){
-        while (key.length() < 8){
-            key = key + key;
+        if (key.length() < 8){
+            while (key.length() < 8)
+                key = key + forgeKey(key);
         }
-        return key.substring(0,8);
+        else{
+            String extraKey = key.substring(7);
+            System.out.println("extra key = " + extraKey);
+            key = key.substring(0,7) + forgeKey(extraKey);
+        }
+        System.out.println("key = " + key);
+        return key;
+    }
+
+    //a number between 65-122 (A to z) to add to the key.
+    private String forgeKey(String key){
+        int forgedKey = 0;
+        for (char c : key.toCharArray()){
+            forgedKey += c;
+        }
+        forgedKey = (forgedKey % 57) + 65;
+        System.out.println("forgedkey = " + (char) forgedKey);
+        return Character.toString((char) forgedKey);
     }
 
 }

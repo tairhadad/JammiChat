@@ -8,7 +8,9 @@ public class DES {
         // Part 1 - Key generation
         KeyGeneration keyProcess = new KeyGeneration();
         String binaryKey =  keyProcess.ConvertBinary(key);
+        System.out.println("binary key = " + binaryKey);
         String pcKey = keyProcess.PC(binaryKey,1);
+        System.out.println("pcKey = " + pcKey);
         ArrayList keys_list = keyProcess.split_and_round(pcKey);
 
         ArrayList<String> packages;
@@ -61,16 +63,29 @@ public class DES {
 
     //a function that splits the message into packages of 64bit each. (type 0 = binary code, type 1 = english sentence)
     private ArrayList<String> make_packages(String msg, int type){
+        System.out.println("binary msg 0 = " + msg);
         ArrayList<String> packages = new ArrayList<>();
         String binary_msg = "";
         //convert the original message to binary code.
         if (type == 1){
             binary_msg = new BigInteger(msg.getBytes()).toString(2);
+
+            System.out.println("msg 1 = " + binary_msg);
+
+            if (binary_msg.charAt(0) == '-')
+                binary_msg = "0" + binary_msg.substring(1);
+
+            System.out.println("msg 2 = " + binary_msg);
+
             binary_msg = "0" + binary_msg;
+
+            System.out.println("msg 3 = " + binary_msg);
         }
         else
             binary_msg += msg;
 
+
+        System.out.println("msg 4 = " + binary_msg);
         //cutting the message into 64 bits each
         while (binary_msg.length() > 64)
         {
@@ -177,6 +192,7 @@ public class DES {
         return msg;
     }
 
+    //TODO we only need to decrypt hebrew good... it doesn't decrypt it well.  maybe also ecryption hebrew message is bad.. (but using hebrew keys works just great now)
     private String decrypt(String msg, ArrayList<String> keys_list){
         String mL, mR, new_mL, f_box;
         msg = ip(msg);
