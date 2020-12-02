@@ -1,5 +1,7 @@
 package com.example.Secretgram;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 class KeyGeneration {
@@ -7,11 +9,14 @@ class KeyGeneration {
     private ArrayList<String> Keys = new ArrayList<>(); //Array of 16 keys
 
     // This function convert string to binary
-    String ConvertBinary(String key) {
-        System.out.println("input message: " + key);
+    String ConvertBinary(String key) throws UnsupportedEncodingException {
+        System.out.println("input key: " + key);
 
         //convert the original message to binary code.
-        String binary_msg = new BigInteger(key.getBytes()).toString(2);
+        //key = new String(key.getBytes("UTF-8"), "ISO-8859-1");
+        System.out.println("after first string change = " + key);
+        String binary_msg = new BigInteger(key.getBytes(StandardCharsets.UTF_16BE)).toString(2);
+        System.out.println("at the end = " + binary_msg);
         System.out.println("what came out of it: " + binary_msg);
         if (binary_msg.length() > 0)
         {
@@ -19,13 +24,13 @@ class KeyGeneration {
                 String adder = new String(new char[64 - binary_msg.length()]).replace('\0', '0');
                 binary_msg = adder.concat(binary_msg);
             }
-            //if it's hebrew (length > 64 and first char is '-')
+            //if it's hebrew (length > 64)
             else{
                 binary_msg = hebrewKey(binary_msg);
             }
         }
 
-        System.out.println("output message: " + binary_msg);
+        System.out.println("output key: " + binary_msg);
         return binary_msg;
     }
 
@@ -67,7 +72,7 @@ class KeyGeneration {
     }
 
     //This function responsible for split the message, doing the shift action and create 16 keys.
-    ArrayList split_and_round(String binaryKey) {
+    ArrayList<String> split_and_round(String binaryKey) {
         String C0 , D0;
         String C1, D1;
         final int size =binaryKey.length()/2;

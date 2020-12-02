@@ -13,7 +13,7 @@ public class SHA_256 {
         // digest() method called
         // to calculate message digest of an input
         // and return array of byte
-        return md.digest(input.getBytes(StandardCharsets.UTF_8));
+        return md.digest(input.getBytes(StandardCharsets.UTF_16BE));
     }
 
     public static String toHexString(byte[] hash)

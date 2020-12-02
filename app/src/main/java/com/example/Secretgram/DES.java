@@ -1,98 +1,111 @@
 package com.example.Secretgram;
 
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class DES {
-    String Cipher(String msg, String key, int type) {
-        // Part 1 - Key generation
+
+    String Cipher(String msg, String key, int type) throws UnsupportedEncodingException {
+        System.out.println("ENTERED: " + msg);
+
+        //type: 1 - encryption, 2 - decryption
+        //Part 1 - Key generation
         KeyGeneration keyProcess = new KeyGeneration();
         String binaryKey =  keyProcess.ConvertBinary(key);
-        System.out.println("binary key = " + binaryKey);
         String pcKey = keyProcess.PC(binaryKey,1);
-        System.out.println("pcKey = " + pcKey);
-        ArrayList keys_list = keyProcess.split_and_round(pcKey);
+        ArrayList<String> keys_list = keyProcess.split_and_round(pcKey);
 
-        ArrayList<String> packages;
-        if (type == 1)
-            packages = make_packages(msg, 1);
-        else
-            packages = make_packages(msg, 0);
+        //Part 2 - turning the message into packages
+        ArrayList<String> messagePackages = new ArrayList<>();
+        try {
+            if (type == 1) {
+                msg = "א" + msg;
+                messagePackages = make_packages(msg, 1);
+            }
+            else{
+                //msg = "0000010111010000" + msg;
+                messagePackages = make_packages(msg, 2);
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        System.out.println("MESSAGEPACKAGES = " + messagePackages);
 
         ArrayList<String> encrypted_packages = new ArrayList<>();
         ArrayList<String> decrypted_packages = new ArrayList<>();
 
-        //sending every single package into encryption
+        //sending every single package into encryption / decryption
         if (type == 1) {
-            for (String aPackage : packages)
+            for (String aPackage : messagePackages){
+                System.out.println("aPackage: " + aPackage);
                 encrypted_packages.add(encrypt(aPackage, keys_list));
+                System.out.println("encrypt: " + encrypt(aPackage, keys_list));
+            }
         }
         else {
-            for (String aPackage : packages)
+            for (String aPackage : messagePackages){
+                System.out.println("aPackage: " + aPackage);
                 decrypted_packages.add(decrypt(aPackage, keys_list));
+                System.out.println("decrypt: " + decrypt(aPackage, keys_list));
+            }
+            //decrypted_packages.add(0, "-" + decrypted_packages.get(0).substring(1));
         }
         StringBuilder cipher_msg = new StringBuilder();
 
-        //END PART - grab together all of the packages.
-        if (type == 1)
-        {
+        //Last part - grab together all of the packages.
+        if (type == 1) { //encryption
             for (String encrypted_package : encrypted_packages)
                 cipher_msg.append(encrypted_package);
+
+            System.out.println("LEFT: " + cipher_msg.toString());
+
+            return cipher_msg.toString();
         }
-        if (type == 2)
-        {
-            for (int i = 0; i < decrypted_packages.size() - 1; i++)
+        else { //decryption
+            for (int i = 0; i < decrypted_packages.size() - 1; i++){
                 cipher_msg.append(decrypted_packages.get(i));
+                System.out.println(i + ": " + decrypted_packages.get(i));
+            }
 
             StringBuilder last_part = new StringBuilder(decrypted_packages.get(decrypted_packages.size() - 1));
             while (last_part.charAt(0) == '0')
                 last_part = new StringBuilder(last_part.substring(1));
             while (last_part.length() % 8 != 0)
                 last_part.insert(0, "0");
+            System.out.println("last part: " + last_part);
             cipher_msg.append(last_part);
+            System.out.println("LEFT original: " + cipher_msg);
+            System.out.println("LEFT: " + new String(new BigInteger(cipher_msg.toString(), 2).toByteArray(), StandardCharsets.UTF_16BE).substring(1));
+
+
+            return new String(new BigInteger(cipher_msg.toString(), 2).toByteArray(), StandardCharsets.UTF_16BE).substring(1);
         }
 
-        //Convert the binary to String.
-        String get_msg = new String(new BigInteger(cipher_msg.toString(), 2).toByteArray());
-        if(type==2) {
-           return get_msg;
-
-        }
-        return cipher_msg.toString();
     }
 
     //a function that splits the message into packages of 64bit each. (type 0 = binary code, type 1 = english sentence)
-    private ArrayList<String> make_packages(String msg, int type){
+    private ArrayList<String> make_packages(String msg, int type) throws UnsupportedEncodingException {
         System.out.println("binary msg 0 = " + msg);
         ArrayList<String> packages = new ArrayList<>();
         String binary_msg = "";
         //convert the original message to binary code.
         if (type == 1){
-            binary_msg = new BigInteger(msg.getBytes()).toString(2);
-
-            System.out.println("msg 1 = " + binary_msg);
-
-            if (binary_msg.charAt(0) == '-')
-                binary_msg = "0" + binary_msg.substring(1);
-
-            System.out.println("msg 2 = " + binary_msg);
-
-            binary_msg = "0" + binary_msg;
-
-            System.out.println("msg 3 = " + binary_msg);
+            binary_msg = new BigInteger(msg.getBytes(StandardCharsets.UTF_16BE)).toString(2);
+            //binary_msg = "0" + binary_msg;
         }
         else
             binary_msg += msg;
 
-
-        System.out.println("msg 4 = " + binary_msg);
         //cutting the message into 64 bits each
         while (binary_msg.length() > 64)
         {
             packages.add(binary_msg.substring(0,64));
             binary_msg = binary_msg.substring(64);
         }
-        //for the last package (if it exist), I am filling it with many zeros at the end.
+        //for the last package (if it exist), filling it with zeros at the end.
         // in order to make it also 64 bit.
         if (binary_msg.length() > 0)
         {
@@ -225,8 +238,7 @@ public class DES {
         StringBuilder msg = new StringBuilder();
 
         char [] MsgArray = input.toCharArray();
-        for (int i=0; i<ip.length; i++)
-            msg.append(MsgArray[ip[i] - 1]);
+        for (int value : ip) msg.append(MsgArray[value - 1]);
         return msg.toString();
     }
 
@@ -241,8 +253,7 @@ public class DES {
         StringBuilder msg = new StringBuilder();
         char [] MsgArray = input.toCharArray();
 
-        for (int i=0; i<ip.length; i++)
-            msg.append(MsgArray[ip[i] - 1]);
+        for (int value : ip) msg.append(MsgArray[value - 1]);
 
         return msg.toString();
     }
@@ -258,8 +269,7 @@ public class DES {
         StringBuilder res = new StringBuilder();
         char [] MsgArray = input.toCharArray();
 
-        for (int i=0; i < e.length; i++)
-            res.append(MsgArray[e[i] - 1]);
+        for (int value : e) res.append(MsgArray[value - 1]);
 
         return res.toString();
     }
@@ -276,8 +286,7 @@ public class DES {
         StringBuilder res = new StringBuilder();
         char [] MsgArray = input.toCharArray();
 
-        for (int i=0; i < p.length; i++)
-            res.append(MsgArray[p[i] - 1]);
+        for (int value : p) res.append(MsgArray[value - 1]);
 
 
         return res.toString();

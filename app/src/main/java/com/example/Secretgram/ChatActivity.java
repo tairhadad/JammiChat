@@ -34,6 +34,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -106,13 +107,24 @@ public class ChatActivity extends AppCompatActivity {
                             DES decrypted = new DES();
                             String value= dMessageNum.getText().toString();
                             int finalValue=Integer.parseInt(value);
-                            System.out.println(messagesListtemp.get(finalValue-1).getMessage());
-                            String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
-                            cut[1] = cut[1].replaceAll("\n","");
-                            String decrypted_msg = decrypted.Cipher(cut[1], DESKey, 2);
-                            TextDec.setText( decrypted_msg);
-                            TextDecrypt.setVisibility(View.VISIBLE);
-                            TextDec.setVisibility(View.VISIBLE);
+                            if (finalValue <= messagesListtemp.size()){
+
+                                System.out.println(messagesListtemp.get(finalValue-1).getMessage());
+                                String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
+                                cut[1] = cut[1].replaceAll("\n","");
+                                String decrypted_msg = null;
+                                try {
+                                    decrypted_msg = decrypted.Cipher(cut[1], DESKey, 2);
+                                } catch (UnsupportedEncodingException e) {
+                                    e.printStackTrace();
+                                }
+                                TextDec.setText( decrypted_msg);
+                                TextDecrypt.setVisibility(View.VISIBLE);
+                                TextDec.setVisibility(View.VISIBLE);
+                            }
+                            else{
+                                Toast.makeText(ChatActivity.this, "The Message Number does not exist.", Toast.LENGTH_SHORT).show();
+                            }
                         }
 
                     }
@@ -131,7 +143,12 @@ public class ChatActivity extends AppCompatActivity {
                         System.out.println(messagesListtemp.get(finalValue-1).getMessage());
                         String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
                         cut[1] = cut[1].replaceAll("\n","");
-                        String decrypted_msg = decrypted.Cipher(cut[1], "45454545", 2);
+                        String decrypted_msg = null;
+                        try {
+                            decrypted_msg = decrypted.Cipher(cut[1], "45454545", 2);
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
                         TextDec.setText( decrypted_msg);
                         TextDecrypt.setVisibility(View.VISIBLE);
                         TextDec.setVisibility(View.VISIBLE);
@@ -163,7 +180,11 @@ public class ChatActivity extends AppCompatActivity {
                         if (i == 1) {
                             RootRef.child("Users").child(messageSenderID).child("RSA").setValue("1");
                         }
-                        SendMessage(i);
+                        try {
+                            SendMessage(i);
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
                         //CloseKeyboard();
                     }
                 });
@@ -264,7 +285,7 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
-    private void SendMessage(int i) {
+    private void SendMessage(int i) throws UnsupportedEncodingException {
         //RSA sending message.
         if (i == 1) {
             //TODO send message and encrypt it with RSA
@@ -356,7 +377,12 @@ public class ChatActivity extends AppCompatActivity {
                             if (e_Key.length() != 8) {
                                 DESKey = autoCompleteKey(DESKey);
                             }
-                            String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, DESKey, 1);
+                            String encrypted_msg = null;
+                            try {
+                                encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, DESKey, 1);
+                            } catch (UnsupportedEncodingException e) {
+                                e.printStackTrace();
+                            }
                             String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
                             String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
 
@@ -436,10 +462,8 @@ public class ChatActivity extends AppCompatActivity {
         }
         else{
             String extraKey = key.substring(7);
-            System.out.println("extra key = " + extraKey);
             key = key.substring(0,7) + forgeKey(extraKey);
         }
-        System.out.println("key = " + key);
         return key;
     }
 
@@ -450,7 +474,6 @@ public class ChatActivity extends AppCompatActivity {
             forgedKey += c;
         }
         forgedKey = (forgedKey % 57) + 65;
-        System.out.println("forgedkey = " + (char) forgedKey);
         return Character.toString((char) forgedKey);
     }
 
