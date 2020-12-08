@@ -23,6 +23,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -68,7 +69,7 @@ public class GroupFragment extends Fragment {
 
     private void IntializeFields() {
         list_view = (ListView) groupFragmentView.findViewById(R.id.list_view);
-        arrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1,list_of_groups);
+        arrayAdapter = new ArrayAdapter<>(Objects.requireNonNull(getContext()), android.R.layout.simple_list_item_1, list_of_groups);
         list_view.setAdapter(arrayAdapter);
     }
 
@@ -79,9 +80,8 @@ public class GroupFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 Set<String> set = new HashSet<>();
-                Iterator iterator = dataSnapshot.getChildren().iterator();
-                while(iterator.hasNext()){
-                    set.add(((DataSnapshot) iterator.next()).getKey());
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    set.add(snapshot.getKey());
                 }
                 list_of_groups.clear();
                 list_of_groups.addAll(set);

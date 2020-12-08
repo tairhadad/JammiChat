@@ -22,6 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -82,7 +83,7 @@ public class RegisterActivity extends AppCompatActivity {
 
             //converting the password into SHA-256
             try{
-                sha_password = sha_256.toHexString(sha_256.getSHA(password));
+                sha_password = sha_256.toHexString(SHA_256.getSHA(password));
             }catch (NoSuchAlgorithmException e){
                 System.out.println("Exception thrown for incorrect algorithm: " + e);
             }
@@ -95,7 +96,7 @@ public class RegisterActivity extends AppCompatActivity {
                             {
                                 String deviceToken = FirebaseInstanceId.getInstance().getToken();
 
-                                String currentUserID = mAuth.getCurrentUser().getUid();
+                                String currentUserID = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
                                 RootRef.child("Users").child(currentUserID).setValue("");
 
                                 RootRef.child("Users").child(currentUserID).child("device_token")
@@ -109,7 +110,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 loadingBar.dismiss();
                             }
                             else{
-                                String message = task.getException().toString();
+                                String message = Objects.requireNonNull(task.getException()).toString();
                                 Toast.makeText(RegisterActivity.this,"Error : "+ message,Toast.LENGTH_LONG).show();
                                 loadingBar.dismiss();
                             }

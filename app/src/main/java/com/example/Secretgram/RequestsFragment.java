@@ -1,12 +1,12 @@
 package com.example.Secretgram;
 
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,7 +30,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
+
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -40,7 +41,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
  */
 public class RequestsFragment extends Fragment {
 
-    private View RequestsFragmentView;
     private RecyclerView myRequestsList;
 
     private DatabaseReference ChatRequestsRef, UsersRef, ContactsRef;
@@ -56,21 +56,21 @@ public class RequestsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        RequestsFragmentView=inflater.inflate(R.layout.fragment_requests, container, false);
+        View requestsFragmentView = inflater.inflate(R.layout.fragment_requests, container, false);
 
         mAuth=FirebaseAuth.getInstance();
-        currentUserID= mAuth.getCurrentUser().getUid();
+        currentUserID= Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         ChatRequestsRef= FirebaseDatabase.getInstance().getReference().child("Chat Requests");
         UsersRef= FirebaseDatabase.getInstance().getReference().child("Users");
         ContactsRef= FirebaseDatabase.getInstance().getReference().child("Contacts");
 
-        myRequestsList= (RecyclerView) RequestsFragmentView.findViewById(R.id.chat_requests_list);
+        myRequestsList= (RecyclerView) requestsFragmentView.findViewById(R.id.chat_requests_list);
         myRequestsList.setLayoutManager(new LinearLayoutManager(getContext()));
 
 
         //receiverUserID= getIntent().getExtras().get("visit_user_id").toString();
 
-        return RequestsFragmentView;
+        return requestsFragmentView;
     }
 
 
@@ -92,20 +92,22 @@ public class RequestsFragment extends Fragment {
                         final String list_user_id = getRef(position).getKey();
                         DatabaseReference getTypeRef= getRef(position).child("request_type").getRef();
                         getTypeRef.addValueEventListener(new ValueEventListener() {
+                            @SuppressLint("SetTextI18n")
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 if(dataSnapshot.exists()){
-                                    String type=dataSnapshot.getValue().toString();
+                                    String type= Objects.requireNonNull(dataSnapshot.getValue()).toString();
                                     if(type.equals("received")){
 
+                                        assert list_user_id != null;
                                         UsersRef.child(list_user_id).addValueEventListener(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                                 if(dataSnapshot.hasChild("image")){
-                                                    final String requestProfileImage= dataSnapshot.child("image").getValue().toString();
+                                                    final String requestProfileImage= Objects.requireNonNull(dataSnapshot.child("image").getValue()).toString();
                                                     Picasso.get().load(requestProfileImage).into(holder.profileImage);
                                                 }
-                                                final String requestUserName= dataSnapshot.child("name").getValue().toString();
+                                                final String requestUserName= Objects.requireNonNull(dataSnapshot.child("name").getValue()).toString();
                                                 final String requestUserStatus= dataSnapshot.child("status").getValue().toString();
                                                 holder.userName.setText(requestUserName);
                                                 holder.userStatus.setText("wants to connect with you.");
@@ -114,7 +116,7 @@ public class RequestsFragment extends Fragment {
                                                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                                                     @Override
                                                     public void onClick(View v) {
-                                                        CharSequence options[]= new CharSequence[]
+                                                        CharSequence[] options = new CharSequence[]
                                                                 {
                                                                         "Accept",
                                                                         "Cancel"
@@ -206,14 +208,15 @@ public class RequestsFragment extends Fragment {
                                         Button request_sent_btn = holder.itemView.findViewById(R.id.request_accept_btn);
                                         request_sent_btn.setText("Req Sent");
                                         holder.itemView.findViewById(R.id.request_cancel_btn).setVisibility(View.INVISIBLE);
+                                        assert list_user_id != null;
                                         UsersRef.child(list_user_id).addValueEventListener(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                                 if(dataSnapshot.hasChild("image")){
-                                                    final String requestProfileImage= dataSnapshot.child("image").getValue().toString();
+                                                    final String requestProfileImage= Objects.requireNonNull(dataSnapshot.child("image").getValue()).toString();
                                                     Picasso.get().load(requestProfileImage).into(holder.profileImage);
                                                 }
-                                                final String requestUserName= dataSnapshot.child("name").getValue().toString();
+                                                final String requestUserName= Objects.requireNonNull(dataSnapshot.child("name").getValue()).toString();
                                                 final String requestUserStatus= dataSnapshot.child("status").getValue().toString();
                                                 holder.userName.setText(requestUserName);
                                                 holder.userStatus.setText("you have sent a request to " + requestUserName);
@@ -221,7 +224,7 @@ public class RequestsFragment extends Fragment {
                                                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                                                     @Override
                                                     public void onClick(View v) {
-                                                        CharSequence options[]= new CharSequence[]
+                                                        CharSequence[] options = new CharSequence[]
                                                                 {
                                                                         "Cancel Chat Request"
                                                                 };
@@ -283,8 +286,7 @@ public class RequestsFragment extends Fragment {
                     @Override
                     public RequestsViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
                         View view=LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.user_displiay_layout,viewGroup, false);
-                        RequestsViewHolder holder= new RequestsViewHolder(view);
-                        return holder;
+                        return new RequestsViewHolder(view);
                     }
                 };
         myRequestsList.setAdapter(adapter);

@@ -27,12 +27,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.Objects;
 
-    private Toolbar mToolbar;
-    private ViewPager myViewPager;
-    private TabLayout myTableLayout;
-    private TabsAccessorAdapter myTabsAccessorAdapter;
+public class MainActivity extends AppCompatActivity {
 
     private FirebaseUser currentUser;
     private FirebaseAuth mAuth;
@@ -47,15 +44,15 @@ public class MainActivity extends AppCompatActivity {
         currentUser = mAuth.getCurrentUser();
         RootRef = FirebaseDatabase.getInstance().getReference();
 
-        mToolbar = (Toolbar) findViewById(R.id.main_page_toolbar);
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setTitle("Secretgram");
+        Objects.requireNonNull(getSupportActionBar()).setTitle("Secretgram");
 
-        myViewPager = (ViewPager) findViewById(R.id.main_tabs_pager);
-        myTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
+        ViewPager myViewPager = (ViewPager) findViewById(R.id.main_tabs_pager);
+        TabsAccessorAdapter myTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
         myViewPager.setAdapter(myTabsAccessorAdapter);
 
-        myTableLayout= (TabLayout) findViewById(R.id.main_tabs);
+        TabLayout myTableLayout = (TabLayout) findViewById(R.id.main_tabs);
         myTableLayout.setupWithViewPager(myViewPager);
     }
 
@@ -68,12 +65,12 @@ public class MainActivity extends AppCompatActivity {
             SendUserToLoginActivity();
         }
         else{
-            VerifyUserExistance();
+            VerifyUserExistence();
         }
     }
 
-    private void VerifyUserExistance() {
-        String currentUserID = mAuth.getCurrentUser().getUid();
+    private void VerifyUserExistence() {
+        String currentUserID = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         RootRef.child("Users").child(currentUserID).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {

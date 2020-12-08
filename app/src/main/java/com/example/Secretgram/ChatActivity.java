@@ -1,6 +1,5 @@
 package com.example.Secretgram;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -9,6 +8,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,7 +17,6 @@ import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -39,25 +38,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
-    static int idMessage=0;
-    private String messageReceiverID, messageReceiverName, messageReceiverImage, messageSenderID;
-    private TextView userName, userLastSeen;
+    //static int idMessage=0;
+    private String messageReceiverID;
+    private String messageSenderID;
+    private TextView userName;
     private CircleImageView userImage;
 
-    private Toolbar ChatToolBar;
-    private FirebaseAuth mAuth;
-    private DatabaseReference RootRef, UsersRef;
+    private DatabaseReference RootRef;
     private ImageButton SendMessageButton;
     private ImageButton decryptedButton;
     private EditText MessageInputText;
 
     private final List<Messages> messagesList = new ArrayList<>();
     private List<Messages> messagesListtemp = new ArrayList<>();
-    private LinearLayoutManager linearLayoutManager;
     private MessageAdapter messageAdapter;
     private RecyclerView userMessagesList;
     private final String[] my_key = new String[1];
@@ -67,13 +65,13 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        mAuth = FirebaseAuth.getInstance();
-        messageSenderID = mAuth.getCurrentUser().getUid();
-        messageReceiverID = getIntent().getExtras().get("visit_user_id").toString();
-        messageReceiverName = getIntent().getExtras().get("visit_user_name").toString();
-        messageReceiverImage = getIntent().getExtras().get("visit_image").toString();
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        messageSenderID = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
+        messageReceiverID = Objects.requireNonNull(Objects.requireNonNull(getIntent().getExtras()).get("visit_user_id")).toString();
+        String messageReceiverName = Objects.requireNonNull(getIntent().getExtras().get("visit_user_name")).toString();
+        String messageReceiverImage = Objects.requireNonNull(getIntent().getExtras().get("visit_image")).toString();
         RootRef = FirebaseDatabase.getInstance().getReference();
-        UsersRef= FirebaseDatabase.getInstance().getReference().child("Users");
+        //DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference().child("Users");
         InitializeControllers();
 
         userName.setText(messageReceiverName);
@@ -166,7 +164,7 @@ public class ChatActivity extends AppCompatActivity {
         SendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CharSequence options[] = new CharSequence[]
+                CharSequence[] options = new CharSequence[]
                         {
                                 "DES",
                                 "RSA",
@@ -195,19 +193,21 @@ public class ChatActivity extends AppCompatActivity {
 
     private void InitializeControllers() {
 
-        ChatToolBar = (Toolbar) findViewById(R.id.chat_toolbar);
-        setSupportActionBar(ChatToolBar);
+        Toolbar chatToolBar = (Toolbar) findViewById(R.id.chat_toolbar);
+        setSupportActionBar(chatToolBar);
         ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setDisplayShowCustomEnabled(true);
         LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View actionBarView = layoutInflater.inflate(R.layout.custom_chat_bar, null);
+        assert layoutInflater != null;
+        @SuppressLint("InflateParams") View actionBarView = layoutInflater.inflate(R.layout.custom_chat_bar, null);
         actionBar.setCustomView(actionBarView);
 
 
         userImage = (CircleImageView) findViewById(R.id.custom_profile_Image);
         userName = (TextView) findViewById(R.id.custom_profile_name);
-        userLastSeen = (TextView) findViewById(R.id.custom_user_last_seen);
+        TextView userLastSeen = (TextView) findViewById(R.id.custom_user_last_seen);
 
         SendMessageButton = (ImageButton) findViewById(R.id.send_message_btn);
         decryptedButton = (ImageButton) findViewById(R.id.decrypt);
@@ -216,7 +216,7 @@ public class ChatActivity extends AppCompatActivity {
 
         messageAdapter = new MessageAdapter(messagesList);
         userMessagesList = (RecyclerView) findViewById(R.id.private_message_list_of_users);
-        linearLayoutManager = new LinearLayoutManager(this);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         userMessagesList.setLayoutManager(linearLayoutManager);
         userMessagesList.setAdapter(messageAdapter);
 
@@ -233,7 +233,7 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                String myKey = dataSnapshot.child(messageSenderID).child("Key").getValue().toString();
+                String myKey = Objects.requireNonNull(dataSnapshot.child(messageSenderID).child("Key").getValue()).toString();
                 my_key[0] = myKey;
             }
 
@@ -260,7 +260,7 @@ public class ChatActivity extends AppCompatActivity {
                         Messages messages = dataSnapshot.getValue(Messages.class);
                         messagesList.add(messages);
                         messageAdapter.notifyDataSetChanged();
-                        userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
+                        userMessagesList.smoothScrollToPosition(Objects.requireNonNull(userMessagesList.getAdapter()).getItemCount());
                     }
 
                     @Override
@@ -309,7 +309,7 @@ public class ChatActivity extends AppCompatActivity {
                 final Map messageBodyDetails = new HashMap();
 
                 //if (my_key[0] != null) {
-                    String str = my_key[0];
+                    //String str = my_key[0];
                     DES des = new DES();
                     String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, "45454545", 1);
 

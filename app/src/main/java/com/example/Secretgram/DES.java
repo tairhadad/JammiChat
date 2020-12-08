@@ -1,6 +1,5 @@
 package com.example.Secretgram;
 
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -9,8 +8,6 @@ import java.util.ArrayList;
 public class DES {
 
     String Cipher(String msg, String key, int type) throws UnsupportedEncodingException {
-        System.out.println("ENTERED: " + msg);
-
         //type: 1 - encryption, 2 - decryption
         //Part 1 - Key generation
         KeyGeneration keyProcess = new KeyGeneration();
@@ -19,20 +16,15 @@ public class DES {
         ArrayList<String> keys_list = keyProcess.split_and_round(pcKey);
 
         //Part 2 - turning the message into packages
-        ArrayList<String> messagePackages = new ArrayList<>();
-        try {
-            if (type == 1) {
-                msg = "א" + msg;
-                messagePackages = make_packages(msg, 1);
-            }
-            else{
-                //msg = "0000010111010000" + msg;
-                messagePackages = make_packages(msg, 2);
-            }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        ArrayList<String> messagePackages;
+        if (type == 1) {
+            //adds "א" to on every 3 Characters (because each character is 16 bit [thanks to the UTF_16BE] and we gotta start with hebrew letter with this StandartCharset or it will encrypt the english letters bad.
+            msg = addAlef(msg);
+            messagePackages = make_packages(msg, 1);
         }
-        System.out.println("MESSAGEPACKAGES = " + messagePackages);
+        else{
+            messagePackages = make_packages(msg, 2);
+        }
 
         ArrayList<String> encrypted_packages = new ArrayList<>();
         ArrayList<String> decrypted_packages = new ArrayList<>();
@@ -40,16 +32,12 @@ public class DES {
         //sending every single package into encryption / decryption
         if (type == 1) {
             for (String aPackage : messagePackages){
-                System.out.println("aPackage: " + aPackage);
                 encrypted_packages.add(encrypt(aPackage, keys_list));
-                System.out.println("encrypt: " + encrypt(aPackage, keys_list));
             }
         }
         else {
             for (String aPackage : messagePackages){
-                System.out.println("aPackage: " + aPackage);
                 decrypted_packages.add(decrypt(aPackage, keys_list));
-                System.out.println("decrypt: " + decrypt(aPackage, keys_list));
             }
             //decrypted_packages.add(0, "-" + decrypted_packages.get(0).substring(1));
         }
@@ -60,58 +48,54 @@ public class DES {
             for (String encrypted_package : encrypted_packages)
                 cipher_msg.append(encrypted_package);
 
-            System.out.println("LEFT: " + cipher_msg.toString());
-
             return cipher_msg.toString();
         }
         else { //decryption
-            for (int i = 0; i < decrypted_packages.size() - 1; i++){
+            for (int i = 0; i < decrypted_packages.size(); i++){
+                //substring 16 to remove the first "א" from each of the decrypted messages - NOT YET.
                 cipher_msg.append(decrypted_packages.get(i));
-                System.out.println(i + ": " + decrypted_packages.get(i));
             }
 
-            StringBuilder last_part = new StringBuilder(decrypted_packages.get(decrypted_packages.size() - 1));
-            while (last_part.charAt(0) == '0')
-                last_part = new StringBuilder(last_part.substring(1));
-            while (last_part.length() % 8 != 0)
-                last_part.insert(0, "0");
-            System.out.println("last part: " + last_part);
-            cipher_msg.append(last_part);
-            System.out.println("LEFT original: " + cipher_msg);
-            System.out.println("LEFT: " + new String(new BigInteger(cipher_msg.toString(), 2).toByteArray(), StandardCharsets.UTF_16BE).substring(1));
-
-
-            return new String(new BigInteger(cipher_msg.toString(), 2).toByteArray(), StandardCharsets.UTF_16BE).substring(1);
+            StringBuilder result = new StringBuilder();
+            String answer = cipher_msg.toString();
+            while (answer.length() > 64){
+                result.append(new String(new BigInteger(answer.substring(0,64),2).toByteArray(),StandardCharsets.UTF_16BE));
+                answer = answer.substring(64);
+            }
+            result.append(new String(new BigInteger(answer,2).toByteArray(),StandardCharsets.UTF_16BE));
+            return removeAlef(result.toString());
         }
 
     }
 
     //a function that splits the message into packages of 64bit each. (type 0 = binary code, type 1 = english sentence)
-    private ArrayList<String> make_packages(String msg, int type) throws UnsupportedEncodingException {
-        System.out.println("binary msg 0 = " + msg);
+    private ArrayList<String> make_packages(String msg, int type) {
         ArrayList<String> packages = new ArrayList<>();
-        String binary_msg = "";
+        StringBuilder binary_msg = new StringBuilder();
         //convert the original message to binary code.
         if (type == 1){
-            binary_msg = new BigInteger(msg.getBytes(StandardCharsets.UTF_16BE)).toString(2);
-            //binary_msg = "0" + binary_msg;
+            binary_msg = new StringBuilder(new BigInteger(msg.getBytes(StandardCharsets.UTF_16BE)).toString(2));
+
+            //to complete unfinished binary messages to 16 bit for each letter.
+            while (binary_msg.length() % 16 != 0)
+                binary_msg.insert(0, "0");
         }
         else
-            binary_msg += msg;
+            binary_msg.append(msg);
 
         //cutting the message into 64 bits each
         while (binary_msg.length() > 64)
         {
             packages.add(binary_msg.substring(0,64));
-            binary_msg = binary_msg.substring(64);
+            binary_msg = new StringBuilder(binary_msg.substring(64));
         }
         //for the last package (if it exist), filling it with zeros at the end.
         // in order to make it also 64 bit.
         if (binary_msg.length() > 0)
         {
             String adder = new String(new char[64 - binary_msg.length()]).replace('\0', '0');
-            binary_msg = adder.concat(binary_msg);
-            packages.add(binary_msg);
+            binary_msg = new StringBuilder(adder.concat(binary_msg.toString()));
+            packages.add(binary_msg.toString());
         }
         return packages;
     }
@@ -344,6 +328,28 @@ public class DES {
     }
 
 
+    public String addAlef(String msg){
+        //in case we need to work with a small message.
+        if (msg.length() <= 3)
+            return "א" + msg;
 
+        StringBuilder addedAlefMsg = new StringBuilder();
+        while (msg.length() > 3) {
+            addedAlefMsg.append("א").append(msg.substring(0, 3));
+            msg = msg.substring(3);
+        }
+        addedAlefMsg.append("א").append(msg);
+        return addedAlefMsg.toString();
+    }
 
+    public String removeAlef(String msg){
+        StringBuilder removedAlefMsg = new StringBuilder();
+        msg = msg.substring(1);
+        while (msg.length() > 4){
+            removedAlefMsg.append(msg.substring(0,3));
+            msg = msg.substring(4);
+        }
+        removedAlefMsg.append(msg);
+        return removedAlefMsg.toString();
+    }
 }

@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -26,17 +27,19 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
 
 public class GroupChatActivity extends AppCompatActivity {
 
-    private Toolbar mToolbar;
     private ImageButton SendMessageButton;
     private EditText userMessageInput;
     private ScrollView mScrollview;
     private TextView displayTextMessage;
-    private FirebaseAuth mAuth;
-    private DatabaseReference UsersRef, GroupNameRef, GroupMessageKeyRef;
-    private String currentGroupName,currentUserID, currentUserName, currentDate,currentTime;
+    private DatabaseReference UsersRef;
+    private DatabaseReference GroupNameRef;
+    private String currentGroupName;
+    private String currentUserID;
+    private String currentUserName;
 
 
     @Override
@@ -45,11 +48,11 @@ public class GroupChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_group_chat);
 
 
-        currentGroupName = getIntent().getExtras().get("groupName").toString();
+        currentGroupName = Objects.requireNonNull(Objects.requireNonNull(getIntent().getExtras()).get("groupName")).toString();
         Toast.makeText(GroupChatActivity.this,currentGroupName,Toast.LENGTH_SHORT).show();
 
-        mAuth= FirebaseAuth.getInstance();
-        currentUserID = mAuth.getCurrentUser().getUid();
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        currentUserID = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
         GroupNameRef = FirebaseDatabase.getInstance().getReference().child("Groups").child(currentGroupName);
 
@@ -107,9 +110,9 @@ public class GroupChatActivity extends AppCompatActivity {
 
 
     private void InitializeFields() {
-        mToolbar = (Toolbar) findViewById(R.id.group_chat_bar_layout);
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.group_chat_bar_layout);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setTitle(currentGroupName);
+        Objects.requireNonNull(getSupportActionBar()).setTitle(currentGroupName);
 
         SendMessageButton = (ImageButton) findViewById(R.id.send_message_button);
         userMessageInput = (EditText) findViewById(R.id.input_group_message);
@@ -125,7 +128,7 @@ public class GroupChatActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 if(dataSnapshot.exists()){
-                    currentUserName = dataSnapshot.child("name").getValue().toString();
+                    currentUserName = Objects.requireNonNull(dataSnapshot.child("name").getValue()).toString();
 
                 }
             }
@@ -144,23 +147,24 @@ public class GroupChatActivity extends AppCompatActivity {
         }
         else{
             Calendar calForDate = Calendar.getInstance();
-            SimpleDateFormat currentDateFormat = new SimpleDateFormat("MMM dd, yyyy");
-            currentDate = currentDateFormat.format(calForDate.getTime());
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat currentDateFormat = new SimpleDateFormat("MMM dd, yyyy");
+            String currentDate = currentDateFormat.format(calForDate.getTime());
 
             Calendar calForTime = Calendar.getInstance();
-            SimpleDateFormat currentTimeFormat = new SimpleDateFormat("hh:mm a");
-            currentTime = currentTimeFormat.format(calForTime.getTime());
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat currentTimeFormat = new SimpleDateFormat("hh:mm a");
+            String currentTime = currentTimeFormat.format(calForTime.getTime());
 
             HashMap<String,Object> groupMessageKey = new HashMap<>();
             GroupNameRef.updateChildren(groupMessageKey);
 
-            GroupMessageKeyRef = GroupNameRef.child(messageKey);
+            assert messageKey != null;
+            DatabaseReference groupMessageKeyRef = GroupNameRef.child(messageKey);
             HashMap<String,Object> messageInfoMap = new HashMap<>();
                 messageInfoMap.put("name",currentUserName);
                 messageInfoMap.put("message",message);
-                messageInfoMap.put("date",currentDate);
-                messageInfoMap.put("time",currentTime);
-            GroupMessageKeyRef.updateChildren(messageInfoMap);
+                messageInfoMap.put("date", currentDate);
+                messageInfoMap.put("time", currentTime);
+            groupMessageKeyRef.updateChildren(messageInfoMap);
         }
     }
 

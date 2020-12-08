@@ -3,6 +3,7 @@ package com.example.Secretgram;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -30,7 +32,7 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressDialog loadingBar;
     private Button LoginButton,PhoneLoginButtom;
     private EditText UserEmail, UserPassword;
-    private TextView NeedNewAccountLink, ForgetPasswodLink;
+    private TextView NeedNewAccountLink;
     private SHA_256 sha_256;
 
     private DatabaseReference UserRef;
@@ -66,6 +68,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    @SuppressLint("ShowToast")
     private void AllowUserToLogin() {
 
         String email = UserEmail.getText().toString();
@@ -80,7 +83,7 @@ public class LoginActivity extends AppCompatActivity {
         else
         {
             try{
-                sha_password = sha_256.toHexString(sha_256.getSHA(password));
+                sha_password = SHA_256.toHexString(SHA_256.getSHA(password));
             }catch (NoSuchAlgorithmException e){
                 System.out.println("Exception thrown for incorrect algorithm: " + e);
             }
@@ -95,7 +98,7 @@ public class LoginActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<AuthResult> task) {
 
                             if(task.isSuccessful()){
-                                String currentUserId = mAuth.getCurrentUser().getUid();
+                                String currentUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
                                 String deviceToken = FirebaseInstanceId.getInstance().getToken();
                                 UserRef.child(currentUserId).child("device_token")
                                         .setValue(deviceToken)
@@ -111,7 +114,7 @@ public class LoginActivity extends AppCompatActivity {
                                         });
                             }
                             else{
-                                String message = task.getException().toString();
+                                String message = Objects.requireNonNull(task.getException()).toString();
                                 Toast.makeText(LoginActivity.this,"Error : "+ message,Toast.LENGTH_LONG).show();
                                 loadingBar.dismiss();
 
@@ -127,7 +130,7 @@ public class LoginActivity extends AppCompatActivity {
         UserEmail = (EditText)findViewById(R.id.login_email);
         UserPassword = (EditText)findViewById(R.id.login_password);
         NeedNewAccountLink = (TextView)findViewById(R.id.need_new_account_link);
-        ForgetPasswodLink = (TextView)findViewById(R.id.forget_password_link);
+        TextView forgetPasswodLink = (TextView) findViewById(R.id.forget_password_link);
         loadingBar = new ProgressDialog(this);
     }
 

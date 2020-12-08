@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
@@ -34,6 +35,7 @@ import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -43,20 +45,18 @@ public class SettingActivity extends AppCompatActivity {
     private EditText userName,userStatus;
     private CircleImageView userProfileImage;
     private String currentUserID;
-    private FirebaseAuth mAuth;
     private DatabaseReference RootRef;
 
     private static final int GalleryPick=1;
     private StorageReference UserProfileImagesRef;
     private ProgressDialog loadingBar;
-    private Toolbar SettingsToolBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
-        mAuth = FirebaseAuth.getInstance();
-        currentUserID = mAuth.getCurrentUser().getUid();
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        currentUserID = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         RootRef = FirebaseDatabase.getInstance().getReference();
         UserProfileImagesRef = FirebaseStorage.getInstance().getReference().child("Profile Images");
 
@@ -94,9 +94,9 @@ public class SettingActivity extends AppCompatActivity {
         userStatus = (EditText)findViewById(R.id.set_profile_status);
         userProfileImage = (CircleImageView)findViewById(R.id.set_profile_image);
         loadingBar = new ProgressDialog(this);
-        SettingsToolBar= (Toolbar) findViewById(R.id.settings_toolbar);
-        setSupportActionBar(SettingsToolBar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Toolbar settingsToolBar = (Toolbar) findViewById(R.id.settings_toolbar);
+        setSupportActionBar(settingsToolBar);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setTitle("Account Settings");
 
@@ -106,7 +106,7 @@ public class SettingActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode==GalleryPick && resultCode==RESULT_OK && data!=null){
-            Uri ImageUri = data.getData();
+            //Uri ImageUri = data.getData();
             CropImage.activity()
                     .setGuidelines(CropImageView.Guidelines.ON)
                     .setAspectRatio(1,1)
@@ -115,6 +115,7 @@ public class SettingActivity extends AppCompatActivity {
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if(resultCode==RESULT_OK){
+                assert result != null;
                 final Uri resultUri = result.getUri();
                 loadingBar.setTitle("Set Profile Image");
                 loadingBar.setMessage("Please wait,your profile image is updating.");
@@ -127,7 +128,7 @@ public class SettingActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                         if(task.isSuccessful()){
                             Toast.makeText(SettingActivity.this, "Profile Image uploaded Successfully.", Toast.LENGTH_SHORT).show();
-                            final String downloadUrl = task.getResult().getStorage().getDownloadUrl().toString();
+                            //final String downloadUrl = task.getResult().getStorage().getDownloadUrl().toString();
                             final String downloadUrl1 = resultUri.toString();
                                     RootRef.child("Users").child(currentUserID).child("image")
                                     .setValue(downloadUrl1)
@@ -139,7 +140,7 @@ public class SettingActivity extends AppCompatActivity {
                                                 loadingBar.dismiss();
                                             }
                                             else{
-                                                String message= task.getException().toString();
+                                                String message= Objects.requireNonNull(task.getException()).toString();
                                                 Toast.makeText(SettingActivity.this, "Error: "+ message, Toast.LENGTH_SHORT).show();
                                                 loadingBar.dismiss();
                                             }
@@ -148,7 +149,7 @@ public class SettingActivity extends AppCompatActivity {
                                     });
                         }
                         else{
-                            String message = task.getException().toString();
+                            String message = Objects.requireNonNull(task.getException()).toString();
                             Toast.makeText(SettingActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
                             loadingBar.dismiss();
                         }
@@ -158,6 +159,7 @@ public class SettingActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private void UpdateSetting() {
         String setUserName = userName.getText().toString();
         String setStatus = userStatus.getText().toString();
@@ -189,7 +191,7 @@ public class SettingActivity extends AppCompatActivity {
                             }
                             else
                             {
-                                String message = task.getException().toString();
+                                String message = Objects.requireNonNull(task.getException()).toString();
                                 Toast.makeText(SettingActivity.this,"Error : " + message,Toast.LENGTH_SHORT).show();
                             }
                         }
@@ -205,9 +207,9 @@ public class SettingActivity extends AppCompatActivity {
 
                         if((dataSnapshot.exists()) && (dataSnapshot.hasChild("name")&& (dataSnapshot.hasChild("image")))){
 
-                            String retrieveUserName = dataSnapshot.child("name").getValue().toString();
-                            String retrieveStatus = dataSnapshot.child("status").getValue().toString();
-                            String retrieveProfileImage = dataSnapshot.child("image").getValue().toString();
+                            String retrieveUserName = Objects.requireNonNull(dataSnapshot.child("name").getValue()).toString();
+                            String retrieveStatus = Objects.requireNonNull(dataSnapshot.child("status").getValue()).toString();
+                            String retrieveProfileImage = Objects.requireNonNull(dataSnapshot.child("image").getValue()).toString();
                             userName.setText(retrieveUserName);
                             userStatus.setText(retrieveStatus);
                             Picasso.get().load(retrieveProfileImage).into(userProfileImage);
@@ -216,8 +218,8 @@ public class SettingActivity extends AppCompatActivity {
                         }
                         else if ((dataSnapshot.exists()) && (dataSnapshot.hasChild("name")))
                         {
-                            String retrieveUserName = dataSnapshot.child("name").getValue().toString();
-                            String retrieveStatus = dataSnapshot.child("status").getValue().toString();
+                            String retrieveUserName = Objects.requireNonNull(dataSnapshot.child("name").getValue()).toString();
+                            String retrieveStatus = Objects.requireNonNull(dataSnapshot.child("status").getValue()).toString();
                             userName.setText(retrieveUserName);
                             userStatus.setText(retrieveStatus);
 

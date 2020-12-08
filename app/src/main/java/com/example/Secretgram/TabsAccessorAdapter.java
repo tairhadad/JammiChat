@@ -20,20 +20,16 @@ public class TabsAccessorAdapter extends FragmentStatePagerAdapter {
         switch (position)
         {
             case 0:
-                ChatsFragment chatsFragment= new ChatsFragment();
-                return chatsFragment;
+                return new ChatsFragment();
 
             case 1:
-                GroupFragment groupFragment= new GroupFragment();
-                return groupFragment;
+                return new GroupFragment();
 
             case 2:
-                ContactsFragment contactsFragment= new ContactsFragment();
-                return contactsFragment;
+                return new ContactsFragment();
 
             case 3:
-                RequestsFragment requestsFragment= new RequestsFragment();
-                return requestsFragment;
+                return new RequestsFragment();
 
             default:
                 return null;

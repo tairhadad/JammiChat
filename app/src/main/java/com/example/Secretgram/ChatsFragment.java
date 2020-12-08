@@ -1,6 +1,7 @@
 package com.example.Secretgram;
 
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -24,6 +25,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import java.util.Objects;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
@@ -32,11 +35,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
  */
 public class ChatsFragment extends Fragment {
 
-    private View PrivateChatsView;
     private RecyclerView chatsList;
     private DatabaseReference ChatsRef, UsersRef;
-    private FirebaseAuth mAuth;
-    private String currentUserID;
 
 
     public ChatsFragment() {
@@ -48,16 +48,16 @@ public class ChatsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        PrivateChatsView= inflater.inflate(R.layout.fragment_chats, container, false);
-        mAuth= FirebaseAuth.getInstance();
-        currentUserID= mAuth.getCurrentUser().getUid();
+        View privateChatsView = inflater.inflate(R.layout.fragment_chats, container, false);
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        String currentUserID = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         ChatsRef= FirebaseDatabase.getInstance().getReference().child("Contacts").child(currentUserID);
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
 
-        chatsList= (RecyclerView) PrivateChatsView.findViewById(R.id.chats_list);
+        chatsList= (RecyclerView) privateChatsView.findViewById(R.id.chats_list);
         chatsList.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        return PrivateChatsView;
+        return privateChatsView;
     }
 
     @Override
@@ -75,18 +75,20 @@ public class ChatsFragment extends Fragment {
                         final String userIDs = getRef(position).getKey();
                         final String[] retImage = {"default_image"};
 
+                        assert userIDs != null;
                         UsersRef.child(userIDs).addValueEventListener(new ValueEventListener() {
+                            @SuppressLint("SetTextI18n")
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                                 if(dataSnapshot.exists())
                                 {
                                     if(dataSnapshot.hasChild("image")){
-                                        retImage[0] = dataSnapshot.child("image").getValue().toString();
+                                        retImage[0] = Objects.requireNonNull(dataSnapshot.child("image").getValue()).toString();
                                         Picasso.get().load(retImage[0]).into(holder.profileImage);
                                     }
-                                    final String retName = dataSnapshot.child("name").getValue().toString();
-                                    final String retStatus = dataSnapshot.child("status").getValue().toString();
+                                    final String retName = Objects.requireNonNull(dataSnapshot.child("name").getValue()).toString();
+                                    //final String retStatus = dataSnapshot.child("status").getValue().toString();
 
                                     holder.userName.setText(retName);
                                     holder.userStatus.setText("Last Seen: " + "\n" + "Date "+ " Time");

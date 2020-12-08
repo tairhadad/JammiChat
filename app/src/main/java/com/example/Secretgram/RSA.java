@@ -85,18 +85,18 @@ public class RSA {
 
         BigInteger KAB = other_public.modPow(Kpri, prime);
 
-        String key = String.valueOf(KAB);
+        StringBuilder key = new StringBuilder(String.valueOf(KAB));
 
         if (key.length() > 8)
-            key = key.substring(0,8);
+            key = new StringBuilder(key.substring(0, 8));
         else
         {
             while (key.length() <= 8){
-                key = key + "0";
+                key.append("0");
             }
         }
 
-        return key;
+        return key.toString();
 
     }
 

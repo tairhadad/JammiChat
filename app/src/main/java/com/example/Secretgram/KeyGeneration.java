@@ -1,5 +1,4 @@
 package com.example.Secretgram;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -9,15 +8,12 @@ class KeyGeneration {
     private ArrayList<String> Keys = new ArrayList<>(); //Array of 16 keys
 
     // This function convert string to binary
-    String ConvertBinary(String key) throws UnsupportedEncodingException {
+    String ConvertBinary(String key) {
         System.out.println("input key: " + key);
 
         //convert the original message to binary code.
         //key = new String(key.getBytes("UTF-8"), "ISO-8859-1");
-        System.out.println("after first string change = " + key);
         String binary_msg = new BigInteger(key.getBytes(StandardCharsets.UTF_16BE)).toString(2);
-        System.out.println("at the end = " + binary_msg);
-        System.out.println("what came out of it: " + binary_msg);
         if (binary_msg.length() > 0)
         {
             if (binary_msg.length() < 64) {
@@ -29,8 +25,6 @@ class KeyGeneration {
                 binary_msg = hebrewKey(binary_msg);
             }
         }
-
-        System.out.println("output key: " + binary_msg);
         return binary_msg;
     }
 
@@ -102,9 +96,9 @@ class KeyGeneration {
     private String hebrewKey(String key){
         StringBuilder sb = new StringBuilder();
         String one = "0" + key.substring(1,64);
-        String two = "0" + key.substring(64);
+        StringBuilder two = new StringBuilder("0" + key.substring(64));
         while (two.length() < 64)
-            two += "0";
+            two.append("0");
         for (int i = 0; i < 64; i++){
             sb.append(charOf(bitOf(one.charAt(i)) ^ bitOf(two.charAt(i))));
         }
