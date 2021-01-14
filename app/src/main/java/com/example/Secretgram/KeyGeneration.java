@@ -9,7 +9,6 @@ class KeyGeneration {
 
     // This function convert string to binary
     String ConvertBinary(String key) {
-        System.out.println("input key: " + key);
 
         //convert the original message to binary code.
         //key = new String(key.getBytes("UTF-8"), "ISO-8859-1");

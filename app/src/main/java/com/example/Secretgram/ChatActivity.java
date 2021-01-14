@@ -31,6 +31,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.io.UnsupportedEncodingException;
@@ -49,7 +50,7 @@ public class ChatActivity extends AppCompatActivity {
     private TextView userName;
     private CircleImageView userImage;
 
-    private DatabaseReference RootRef;
+    private DatabaseReference RootRef, ContactsRef;
     private ImageButton SendMessageButton;
     private ImageButton decryptedButton;
     private EditText MessageInputText;
@@ -58,7 +59,7 @@ public class ChatActivity extends AppCompatActivity {
     private List<Messages> messagesListtemp = new ArrayList<>();
     private MessageAdapter messageAdapter;
     private RecyclerView userMessagesList;
-    private final String[] my_key = new String[1];
+    private String RSA_key = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,11 +72,24 @@ public class ChatActivity extends AppCompatActivity {
         String messageReceiverName = Objects.requireNonNull(getIntent().getExtras().get("visit_user_name")).toString();
         String messageReceiverImage = Objects.requireNonNull(getIntent().getExtras().get("visit_image")).toString();
         RootRef = FirebaseDatabase.getInstance().getReference();
+        ContactsRef= FirebaseDatabase.getInstance().getReference().child("Contacts");
+
         //DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference().child("Users");
         InitializeControllers();
 
         userName.setText(messageReceiverName);
         Picasso.get().load(messageReceiverImage).placeholder(R.drawable.profile_image).into(userImage);
+
+        ContactsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                RSA_key = Objects.requireNonNull(dataSnapshot.child(messageSenderID).child(messageReceiverID).child("Key").getValue()).toString();
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+
         decryptedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -107,7 +121,6 @@ public class ChatActivity extends AppCompatActivity {
                             int finalValue=Integer.parseInt(value);
                             if (finalValue <= messagesListtemp.size()){
 
-                                System.out.println(messagesListtemp.get(finalValue-1).getMessage());
                                 String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
                                 cut[1] = cut[1].replaceAll("\n","");
                                 String decrypted_msg = null;
@@ -138,12 +151,11 @@ public class ChatActivity extends AppCompatActivity {
                         DES decrypted = new DES();
                         String value= dMessageNum.getText().toString();
                         int finalValue=Integer.parseInt(value);
-                        System.out.println(messagesListtemp.get(finalValue-1).getMessage());
                         String[] cut = messagesListtemp.get(finalValue-1).getMessage().split("\n", 2);
                         cut[1] = cut[1].replaceAll("\n","");
                         String decrypted_msg = null;
                         try {
-                            decrypted_msg = decrypted.Cipher(cut[1], "45454545", 2);
+                            decrypted_msg = decrypted.Cipher(cut[1], RSA_key, 2);
                         } catch (UnsupportedEncodingException e) {
                             e.printStackTrace();
                         }
@@ -225,33 +237,6 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        RootRef.child("Users").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                String myKey = Objects.requireNonNull(dataSnapshot.child(messageSenderID).child("Key").getValue()).toString();
-                my_key[0] = myKey;
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
 
         RootRef.child("Messages").child(messageSenderID).child(messageReceiverID)
                 .addChildEventListener(new ChildEventListener() {
@@ -311,7 +296,8 @@ public class ChatActivity extends AppCompatActivity {
                 //if (my_key[0] != null) {
                     //String str = my_key[0];
                     DES des = new DES();
-                    String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, "45454545", 1);
+
+                    String encrypted_msg = "Message number: " + (messagesList.size() + 1) + "\n" + des.Cipher(messageText, RSA_key, 1);
 
                     String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
                     String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;

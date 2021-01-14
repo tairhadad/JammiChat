@@ -31,6 +31,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -90,6 +91,7 @@ public class RequestsFragment extends Fragment {
                         holder.itemView.findViewById(R.id.request_cancel_btn).setVisibility(View.VISIBLE);
 
                         final String list_user_id = getRef(position).getKey();
+                        receiverUserID = list_user_id;
                         DatabaseReference getTypeRef= getRef(position).child("request_type").getRef();
                         getTypeRef.addValueEventListener(new ValueEventListener() {
                             @SuppressLint("SetTextI18n")
@@ -124,6 +126,7 @@ public class RequestsFragment extends Fragment {
                                                         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                                                         builder.setTitle(requestUserName + " Chat Request");
 
+                                                        //user accept friend request
                                                         builder.setItems(options, new DialogInterface.OnClickListener() {
                                                             @Override
                                                             public void onClick(DialogInterface dialogInterface, int i) {
@@ -152,7 +155,7 @@ public class RequestsFragment extends Fragment {
                                                                                                                             public void onComplete(@NonNull Task<Void> task) {
                                                                                                                                     if (task.isSuccessful()){
                                                                                                                                         Toast.makeText(getContext(), "New Contact Saved", Toast.LENGTH_SHORT).show();
-
+                                                                                                                                        setKeys();
                                                                                                                                     }
 
                                                                                                                             }
@@ -309,5 +312,35 @@ public class RequestsFragment extends Fragment {
 
 
         }
+    }
+
+    public void setKeys(){
+        //getting and setting public and private keys inside the one who accept.
+
+        ArrayList<String> data;
+
+        ArrayList<String> rec_list;
+        ArrayList<String> send_list;
+
+        RSA r_rsa = new RSA();
+        RSA s_rsa = new RSA();
+        data = r_rsa.Make_RSA();
+
+        //build keys
+        rec_list = r_rsa.Build_Keys(data.get(0), data.get(1));
+        send_list = s_rsa.Build_Keys(data.get(0), data.get(1));
+
+        //changing public keys.
+        send_list.add(s_rsa.Make_ConnectionKey(rec_list.get(0)));
+        rec_list.add(r_rsa.Make_ConnectionKey(send_list.get(0)));
+
+        //updating the sender with his keys
+
+        //UserRef.child(senderUserID).child("PublicKey").setValue(send_list.get(0));
+        ContactsRef.child(receiverUserID).child(currentUserID).child("Key").setValue(send_list.get(2));
+
+        //receiver
+        //UserRef.child(receiverUserID).child("PublicKey").setValue(rec_list.get(0));
+        ContactsRef.child(currentUserID).child(receiverUserID).child("Key").setValue(rec_list.get(2));
     }
 }
